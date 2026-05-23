@@ -13,3 +13,30 @@ class Partido(models.Model):
     estado = models.CharField()
     id_apifootball = models.CharField()
     fecha = models.DateTimeField() #posiblemente se pueda usar null
+
+class TipoApuesta(models.Model):
+
+    nombre = models.CharField(max_length=100)
+    multiplicador = models.DecimalField(max_digits=5, decimal_places=2)
+    monto_minimo = models.DecimalField(max_digits=5, decimal_places=2)
+
+
+class Apuesta(models.Model):
+    ESTADOS = (
+        ("pendiente", "Pendiente"),
+        ("ganada", "Ganada"),
+        ("perdida", "Perdida"),
+    )
+
+    partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
+    tipo_apuesta = models.ForeignKey(TipoApuesta, on_delete=models.CASCADE)
+    monto_apostado= models.DecimalField(max_digits=5, decimal_places=2)
+    prediccion = models.CharField(max_length=100)
+    cuota_aplicada = models.DecimalField(max_digits=5, decimal_places=2)
+    estado = models.CharField(default="pendiente", max_length=100, choices=ESTADOS)
+    ganancia_cliente = models.DecimalField(max_digits=5, decimal_places=2)
+    ganancia_casa = models.DecimalField(max_digits=5, decimal_places=2)
+    resultado_apuesta = models.CharField(max_length=100)
+    fecha = models.DateTimeField()
+
+
