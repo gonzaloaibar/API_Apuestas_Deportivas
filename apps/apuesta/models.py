@@ -20,6 +20,9 @@ class TipoApuesta(models.Model):
     multiplicador = models.DecimalField(max_digits=5, decimal_places=2)
     monto_minimo = models.DecimalField(max_digits=5, decimal_places=2)
 
+    def __str__(self):
+        return f'{self.nombre},{self.multiplicador}, {self.multiplicador}'
+
 
 class Apuesta(models.Model):
     ESTADOS = (
@@ -39,4 +42,5 @@ class Apuesta(models.Model):
     resultado_apuesta = models.CharField(max_length=100)
     fecha = models.DateTimeField()
 
-
+    def __str__(self):
+        return f'{self.tipo_apuesta.nombre},{self.partido},{self.estado},{self.ganancia_casa},{self.fecha}'
