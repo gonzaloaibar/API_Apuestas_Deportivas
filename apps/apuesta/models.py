@@ -2,17 +2,22 @@ from django.db import models
 
 # Create your models here.
 class Partido(models.Model):
+    ESTADOS = (
+        ('pendiente', 'Pendiente'),
+        ('finalizado', 'Finalizado'),
+    )
 
-    equipo_local = models.CharField()
-    equipo_visitante = models.CharField()
-    goles_local = models.IntegerField()
-    goles_visitante = models.IntegerField()
-    resultado_partido = models.IntegerField()
-    tarjetas_amarillas = models.IntegerField()
-    tarjetas_rojas = models.IntegerField()
-    estado = models.CharField()
-    id_apifootball = models.CharField()
+    api_football_id = models.IntegerField(unique=True)
+    equipo_local = models.CharField(max_length=100)
+    equipo_visitante = models.CharField(max_length=100)
+    goles_local = models.IntegerField(null=True, blank=True)
+    goles_visitante = models.IntegerField(null=True, blank=True)
+    resultado_partido = models.BooleanField(default=True)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
     fecha = models.DateTimeField() #posiblemente se pueda usar null
+
+    def __str__(self):
+        return f'{self.equipo_local} vs {self.equipo_visitante}'
 
 class TipoApuesta(models.Model):
 
