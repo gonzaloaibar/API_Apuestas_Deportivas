@@ -8,7 +8,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
 from .models import Partido, Apuesta
-from .serializers import PartidoSerializer
+from .serializers import PartidoSerializer, ApuestaSerializer
 
 class PartidoViewSet(ModelViewSet):
 
@@ -41,7 +41,7 @@ class PartidoViewSet(ModelViewSet):
         }
 
         params = {
-            'league': 128,
+            'league': 128,#por el momento solo liga argentina
             'season': 2023,
             'from': from_date,
             'to': to_date
@@ -66,6 +66,7 @@ class PartidoViewSet(ModelViewSet):
             teams = item['teams']
             goals = item['goals']
 
+
             _, created=Partido.objects.get_or_create(
                 api_football_id=fixture['id'],
                 defaults={
@@ -89,3 +90,12 @@ class PartidoViewSet(ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+
+class ApuestaViewSet(ModelViewSet):
+    queryset = Apuesta.objects.all()
+    serializer_class = ApuestaSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
