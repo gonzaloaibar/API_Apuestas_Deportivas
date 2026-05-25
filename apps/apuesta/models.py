@@ -6,15 +6,19 @@ class Partido(models.Model):
         ('pendiente', 'Pendiente'),
         ('finalizado', 'Finalizado'),
     )
-
+    RESULTADO = (
+        ('gano_local','Ganó el equipo local'),
+        ('gano_visitante','Ganó el equipo visitante'),
+        ('empate','El partido termino en empate'),
+    )
     api_football_id = models.IntegerField(unique=True)
     equipo_local = models.CharField(max_length=100)
     equipo_visitante = models.CharField(max_length=100)
-    goles_local = models.IntegerField(null=True, blank=True)
-    goles_visitante = models.IntegerField(null=True, blank=True)
-    resultado_partido = models.BooleanField(default=True)
+    goles_local = models.IntegerField(null=True, blank=False)
+    goles_visitante = models.IntegerField(null=True, blank=False)
+    resultado_partido = models.CharField(max_length=30,choices=RESULTADO,blank=False,null=False)
     estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
-    fecha = models.DateTimeField() #posiblemente se pueda usar null
+    fecha = models.DateTimeField(null=True) #posiblemente se pueda usar null
 
     def __str__(self):
         return f'{self.equipo_local} vs {self.equipo_visitante}'
