@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
 from pathlib import Path
+
+from django.conf.global_settings import AUTH_USER_MODEL
+
 #from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -45,6 +48,8 @@ INSTALLED_APPS = [
     'apps.servicio',
     'apps.usuario',
 ]
+
+AUTH_USER_MODEL = 'usuario.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
