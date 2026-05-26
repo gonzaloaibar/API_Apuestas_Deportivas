@@ -26,7 +26,7 @@ class PartidoViewSet(ModelViewSet):
 
     @action(methods=['post'], detail=False)
     def importar_partidos(self, request):
-        print(request.data)
+
         fecha_desde = request.data.get('from')
         fecha_hasta = request.data.get('to')
         APIFootballService.importar(fecha_desde, fecha_hasta)

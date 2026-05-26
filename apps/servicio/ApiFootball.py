@@ -2,6 +2,29 @@ import requests
 from django.conf import settings
 from apps.apuesta.models import Partido
 
+def definir_resultado_partido(estado_de_partido,goles_local,goles_visitante):
+    # if fixture['status']['short'] != 'FT':
+    #     #DOCUMENTAR:
+    #     # "FT" es el parametro de partido finalizado, como son partidos viejos es el item que nos importa
+    #     #de otro modo el partido fue cancelado, suspendido o resuelto por mesa
+    #     #por lo tanto lo tomamos como cancelado para este ejemplo
+    #     resultado = 'C'
+    # elif item['goals']['home'] > item['goals']['away']:
+    #     resultado = 'L'
+    # elif item['goals']['home'] < item['goals']['away']:
+    #     resultado = 'v'
+    # else:
+    #     #Caso de empate
+    #     resultado = 'E'
+    if estado_de_partido != 'FT':
+        return 'C'
+    elif goles_local > goles_visitante:
+        return 'L'
+    elif goles_local < goles_visitante:
+        return 'V'
+    else:
+        return 'E'
+
 class APIFootballService:
     @staticmethod
     def importar(from_date, to_date):
@@ -30,9 +53,7 @@ class APIFootballService:
 
         partidos_creados = 0
 
-        print(response.status_code)
-        print(data)
-        print(len(data['response']))
+        #print(len(data['response']))
 
         for item in data['response']:
             fixture = item['fixture']
@@ -48,10 +69,10 @@ class APIFootballService:
                     'goles_local': goals['home'],
                     'goles_visitante': goals['away'],
                     'estado': 'pendiente',
-                    'resultado_partido': True
+                    'resultado_partido': definir_resultado_partido(fixture['status']['short'],item['goals']['home'],item['goals']['away'])
                 }
             )
-            print(item)
+            #print(item)
             if created:
                 partidos_creados += 1
 
