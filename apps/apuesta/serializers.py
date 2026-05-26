@@ -3,6 +3,12 @@ from .models import Partido, Apuesta
 
 class PartidoSerializer(serializers.ModelSerializer):
 
+    #En el JSON de respuesta se mostrará el texto asigando a ResultadoPartido de models.py
+    #lo cual es mas visual para el usuario final
+    resultado_partido = serializers.CharField(
+        source="get_resultado_partido_display",
+        read_only=True
+    )
     class Meta:
         model = Partido
         fields = '__all__'
