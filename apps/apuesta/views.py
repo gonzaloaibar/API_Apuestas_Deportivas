@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
-from .models import Partido, Apuesta
-from .serializers import PartidoSerializer, ApuestaSerializer
+from .models import Partido, Apuesta, TipoApuesta
+from .serializers import PartidoSerializer, ApuestaSerializer, TipoApuestaSerializer
 
 from apps.servicio.ApiFootball import APIFootballService
 
@@ -32,9 +32,12 @@ class PartidoViewSet(ModelViewSet):
         APIFootballService.importar(fecha_desde, fecha_hasta)
         return Response({'mensaje': 'funciona'},status=status.HTTP_200_OK)
 
+class TipoApuestaViewSet(ModelViewSet):
+        queryset = TipoApuesta.objects.all()
+        serializer_class = TipoApuestaSerializer
+
 class ApuestaViewSet(ModelViewSet):
     queryset = Apuesta.objects.all()
     serializer_class = ApuestaSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+

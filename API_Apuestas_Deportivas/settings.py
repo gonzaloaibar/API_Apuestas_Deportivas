@@ -11,10 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
 from pathlib import Path
-
-from django.conf.global_settings import AUTH_USER_MODEL
-
-#from decouple import config
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-aopapjnl%h1^*4k%si9arx$ix#h-ownt1b)=-tmmpsr)e=*b2d'
 
 #api key
-API_FOOTBALL_KEY = os.getenv('API_FOOTBALL_KEY')
+#API_FOOTBALL_KEY = os.getenv('API_FOOTBALL_KEY')
+API_FOOTBALL_KEY=config('API_FOOTBALL_KEY')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -128,9 +127,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
-        'rest_framework.renderers.JSONRenderer'],
+    ],
 }
+
 
