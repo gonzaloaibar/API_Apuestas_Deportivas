@@ -5,11 +5,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = '__all__'
-        campos_extra = {
-            "username": {"write_only":True},
-            "password": {"write_only":True},
-        }
+        fields = [
+        "id",
+        "username",
+        "nombre",
+        "apellido",
+        ]
+        read_only_fields = ["cuil","numero_de_cuenta","saldo",]
 
     #Acá se va a hashear la contraseña del usuario
     def create(self, validated_data):
