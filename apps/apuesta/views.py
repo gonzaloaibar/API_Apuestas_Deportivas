@@ -35,6 +35,15 @@ class PartidoViewSet(ModelViewSet):
         APIFootballService.importar(fecha_desde, fecha_hasta)
         return Response({'mensaje': 'funciona'},status=status.HTTP_200_OK)
 
+    @action(methods=['patch'], detail=True)
+    def terminar_partido(self, request, pk=None):
+        partido=self.get_object()
+        print(partido)
+        partido.estado="finalizado"
+        partido.save()
+
+        return Response({"estado":"partido terminado"})
+
 class TipoApuestaViewSet(ModelViewSet):
         queryset = TipoApuesta.objects.all()
         serializer_class = TipoApuestaSerializer
