@@ -1,4 +1,5 @@
 from django.db import models
+from apps.usuario.models import Usuario
 
 #ESTOS SON LOS POSIBLES RESULTADOS DE UN PARTIDO, POR LO TANTO SE MANEJARAN COMO CONSTANTES
 class ResultadoPartido(models.TextChoices):
@@ -46,6 +47,7 @@ class Apuesta(models.Model):
         ("perdida", "Perdida"),
     )
 
+    apostado_por=models.ForeignKey("usuario.Usuario",on_delete=models.CASCADE,  related_name='apuestas')
     partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
     tipo_apuesta = models.ForeignKey(TipoApuesta, on_delete=models.CASCADE)
     monto_apostado= models.DecimalField(max_digits=10, decimal_places=2)

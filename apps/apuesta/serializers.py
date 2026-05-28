@@ -25,3 +25,9 @@ class ApuestaSerializer(serializers.ModelSerializer):
         model=Apuesta
         fields='__all__'
         read_only_fields = ['estado', 'cuota_aplicada', 'ganancia_casa', 'ganancia_cliente']
+
+    # def create(self, validated_data):
+    #     usuario = validated_data.pop('usuario', None)
+    #     apuesta = Apuesta.objects.create(**validated_data)
+    #
+    #     return apuesta

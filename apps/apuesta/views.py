@@ -2,6 +2,7 @@
 import requests
 
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 
 from rest_framework import status, response
 from rest_framework.response import Response
@@ -12,6 +13,8 @@ from .models import Partido, Apuesta, TipoApuesta
 from .serializers import PartidoSerializer, ApuestaSerializer, TipoApuestaSerializer
 
 from apps.servicio.ApiFootball import APIFootballService
+from ..usuario.models import Usuario
+
 
 class PartidoViewSet(ModelViewSet):
 
@@ -40,4 +43,12 @@ class ApuestaViewSet(ModelViewSet):
     queryset = Apuesta.objects.all()
     serializer_class = ApuestaSerializer
 
+    def perform_create(self, serializer):
 
+
+        if serializer.is_valid():
+            usuario = Usuario.objects.get(id=1)
+            serializer.save(apostado_por=usuario)
+            print(serializer.data)
+            return Response({"data":"naranja"})
+        return Response({"error": "naranja"})
