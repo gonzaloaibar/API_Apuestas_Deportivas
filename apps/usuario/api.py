@@ -1,9 +1,13 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_200_OK
 from rest_framework.views import APIView
-
 from apps.usuario.models import Usuario
 from apps.usuario.serializers import UsuarioSerializer
 from rest_framework import status
+from decimal import Decimal
+
+
 
 class RegistroUsuarioAPIView(APIView):
     
@@ -22,3 +26,21 @@ class TraerUsuariosAPIView(APIView):
         serializer = UsuarioSerializer(usuarios,many=True)
         return Response(serializer.data)
 
+
+#Voy a crear un endpoint cpn una accion especifica para cargar saldo
+#la peticion sera un POST, porque no PATCH porque PATCH reemplazaria el saldo actual
+#con el saldo que quiere cargar el usuario, por lo tanto no es una actualizacion es una
+#agregacion.
+class CargarSaldoAPIView(APIView):
+
+    def post(self,request,pk=None):
+        usuario = Usuario.objects.get(pk=pk)
+
+        monto = request.data["monto"]
+
+        if monto < 0:
+            return Response({'error':'El monto ingresado no es valido'},status=HTTP_400_BAD_REQUEST)
+
+        usuario.saldo += Decimal(str(monto)) #convierto el saldo a Decimal
+        usuario.save()
+        return Response({"Saldo actual":usuario.saldo},status=HTTP_200_OK)
