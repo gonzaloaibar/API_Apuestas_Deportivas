@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Partido, Apuesta
+from .models import Partido, Apuesta, OpcionApuesta
+
 
 class PartidoSerializer(serializers.ModelSerializer):
 
@@ -13,10 +14,10 @@ class PartidoSerializer(serializers.ModelSerializer):
         model = Partido
         fields = '__all__'
 
-# class TipoApuestaSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model=TipoApuesta
-#         fields='__all__'
+class OpcionApuestaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=OpcionApuesta
+        fields='__all__'
 
 
 class ApuestaSerializer(serializers.ModelSerializer):
@@ -24,7 +25,9 @@ class ApuestaSerializer(serializers.ModelSerializer):
     class Meta:
         model=Apuesta
         fields='__all__'
-        read_only_fields = ['estado', 'cuota_aplicada', 'ganancia_casa', 'ganancia_cliente']
+        read_only_fields = ['estado', 'ganancia_casa', 'ganancia_cliente']
+
+
 
     # def create(self, validated_data):
     #     usuario = validated_data.pop('usuario', None)

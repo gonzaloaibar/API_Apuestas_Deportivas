@@ -45,8 +45,8 @@ class OpcionApuesta(models.Model):
     partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
     tipo_apuesta = models.CharField(max_length=100, choices=TipoApuesta.choices,blank=False,null=False)
     prediccion = models.CharField(max_length=100, choices=Prediccion.choices,blank=True,null=True)
-    multiplicador=models.DecimalField(max_digits=2, decimal_places=2, null=False)
-    monto_minimo=models.DecimalField(max_digits=2, decimal_places=2, null=False, default=0)
+    multiplicador=models.DecimalField(max_digits=3, decimal_places=2, null=False)
+    monto_minimo=models.DecimalField(max_digits=20, decimal_places=2, null=False, default=0)
 
 
 class Apuesta(models.Model):
@@ -60,7 +60,7 @@ class Apuesta(models.Model):
     partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
     opcion_apuesta = models.ForeignKey(OpcionApuesta, on_delete=models.CASCADE)
     monto_apostado= models.DecimalField(max_digits=10, decimal_places=2)
-    cuota_aplicada = models.DecimalField(max_digits=10, decimal_places=2)
+    #cuota_aplicada = models.DecimalField(max_digits=10, decimal_places=2)
     estado = models.CharField(default="pendiente", max_length=100, choices=ESTADOS)
     ganancia_cliente = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ganancia_casa = models.DecimalField(max_digits=10, decimal_places=2, default=0)

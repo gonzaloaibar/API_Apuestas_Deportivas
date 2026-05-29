@@ -1,3 +1,4 @@
+from urllib.error import HTTPError
 
 import requests
 
@@ -7,11 +8,12 @@ from django.db.models import Model
 
 from rest_framework import status, response
 from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
-from .models import Partido, Apuesta
-from .serializers import PartidoSerializer, ApuestaSerializer
+from .models import Partido, Apuesta, OpcionApuesta
+from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer
 
 from apps.servicio.ApiFootball import APIFootballService
 from ..usuario.models import Usuario
@@ -69,9 +71,9 @@ class PartidoViewSet(ModelViewSet):
 #             resolver_apuesta_goles()
 
 
-# class TipoApuestaViewSet(ModelViewSet):
-#         queryset = TipoApuesta.objects.all()
-#         serializer_class = TipoApuestaSerializer
+class OpcionApuestaViewSet(ModelViewSet):
+        queryset = OpcionApuesta.objects.all()
+        serializer_class = OpcionApuestaSerializer
 
 class ApuestaViewSet(ModelViewSet):
     queryset = Apuesta.objects.all()
@@ -83,6 +85,6 @@ class ApuestaViewSet(ModelViewSet):
         if serializer.is_valid():
             usuario = Usuario.objects.get(id=1)
             serializer.save(apostado_por=usuario)
-            print(serializer.data)
-            return Response({"data":"naranja"})
-        return Response({"error": "naranja"})
+
+            return Response({"data":"guardado"},status=HTTP_200_OK)
+        return Response(serializer.error,status=HTTP_400_BAD_REQUEST)
