@@ -28,16 +28,25 @@ class Partido(models.Model):
     def __str__(self):
         return f'{self.equipo_local} vs {self.equipo_visitante}'
 
-class TipoApuesta(models.Model):
+class TipoApuesta(models.TextChoices):
+    RESULTADO = "resultado", "Resultado"
+    GOLES = "cantidad_goles", "Cantidad de goles"
 
-    nombre = models.CharField(max_length=100, unique=True)
-    multiplicador = models.DecimalField(max_digits=5, decimal_places=2)
-    monto_minimo = models.DecimalField(max_digits=10, decimal_places=2)
+class Prediccion(models.TextChoices):
+    GANA_LOCAL = "gana_local", "Gana Local"
+    EMPATE = "empate", "Empate"
+    GANA_VISITANTE = "gana_visitante", "Gana Visitante"
 
+    MAS_1_GOL = "mas_1_gol", "Más de 1 gol"
+    MAS_3_GOLES = "mas_3_goles", "Más de 3 goles"
+    MAS_5_GOLES = "mas_5_goles", "Más de 5 goles"
 
-    def __str__(self):
-        return f'{self.nombre}'
-
+class OpcionApuesta(models.Model):
+    partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
+    tipo_apuesta = models.CharField(max_length=100, choices=TipoApuesta.choices,blank=False,null=False)
+    prediccion = models.CharField(max_length=100, choices=Prediccion.choices,blank=True,null=True)
+    multiplicador=models.DecimalField(max_digits=2, decimal_places=2, null=False)
+    monto_minimo=models.DecimalField(max_digits=2, decimal_places=2, null=False, default=0)
 
 
 class Apuesta(models.Model):
@@ -49,27 +58,14 @@ class Apuesta(models.Model):
 
     apostado_por=models.ForeignKey("usuario.Usuario",on_delete=models.CASCADE,  related_name='apuestas')
     partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
-    tipo_apuesta = models.ForeignKey(TipoApuesta, on_delete=models.CASCADE)
+    opcion_apuesta = models.ForeignKey(OpcionApuesta, on_delete=models.CASCADE)
     monto_apostado= models.DecimalField(max_digits=10, decimal_places=2)
-    #prediccion = models.CharField(max_length=100, choices=Prediccion.choices)
     cuota_aplicada = models.DecimalField(max_digits=10, decimal_places=2)
     estado = models.CharField(default="pendiente", max_length=100, choices=ESTADOS)
     ganancia_cliente = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ganancia_casa = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    #resultado_apuesta = models.CharField(max_length=100)
     fecha = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.tipo_apuesta.nombre},{self.partido},{self.estado},{self.ganancia_casa},{self.fecha}'
+        return f'{self.opcion_apuesta.nombre},{self.partido},{self.estado},{self.ganancia_casa},{self.fecha}'
 
-    def aplicar_cuota(self):
-        tipo = self.tipo_apuesta.multiplicador
-        cuota_aplicada=tipo
-
-        return cuota_aplicada
-
-    def save(self,*args, **kwargs):
-        if not self.cuota_aplicada:
-            self.cuota_aplicada=self.aplicar_cuota()
-
-        super().save(*args, **kwargs)

@@ -10,8 +10,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
-from .models import Partido, Apuesta, TipoApuesta
-from .serializers import PartidoSerializer, ApuestaSerializer, TipoApuestaSerializer
+from .models import Partido, Apuesta
+from .serializers import PartidoSerializer, ApuestaSerializer
 
 from apps.servicio.ApiFootball import APIFootballService
 from ..usuario.models import Usuario
@@ -43,35 +43,35 @@ class PartidoViewSet(ModelViewSet):
         partido.estado="finalizado"
 
 
-        resolver_apuesta(partido.pk, partido.resultado_partido)
+        #resolver_apuesta(partido.pk, partido.resultado_partido)
         partido.save()
         return Response({"estado":"partido terminado"})
 
-def resolver_apuesta_resultado():
-    print("resolver_resultado")
-    pass
+# def resolver_apuesta_resultado():
+#     print("resolver_resultado")
+#     pass
+#
+# def resolver_apuesta_goles():
+#     print("goles")
+#     pass
+#
+#
+# def resolver_apuesta(id_partido, resultado_partido):
+#
+#     apuestas=Apuesta.objects.filter(partido=id_partido)
+#     print(apuestas)
+#     for apuesta in apuestas:
+#         tipo=TipoApuesta.objects.get(nombre=apuesta.tipo_apuesta)
+#         print(tipo)
+#         if tipo.pk == 1:
+#             resolver_apuesta_resultado()
+#         elif tipo.pk == 2:
+#             resolver_apuesta_goles()
 
-def resolver_apuesta_goles():
-    print("goles")
-    pass
 
-
-def resolver_apuesta(id_partido, resultado_partido):
-
-    apuestas=Apuesta.objects.filter(partido=id_partido)
-    print(apuestas)
-    for apuesta in apuestas:
-        tipo=TipoApuesta.objects.get(nombre=apuesta.tipo_apuesta)
-        print(tipo)
-        if tipo.pk == 1:
-            resolver_apuesta_resultado()
-        elif tipo.pk == 2:
-            resolver_apuesta_goles()
-
-
-class TipoApuestaViewSet(ModelViewSet):
-        queryset = TipoApuesta.objects.all()
-        serializer_class = TipoApuestaSerializer
+# class TipoApuestaViewSet(ModelViewSet):
+#         queryset = TipoApuesta.objects.all()
+#         serializer_class = TipoApuestaSerializer
 
 class ApuestaViewSet(ModelViewSet):
     queryset = Apuesta.objects.all()
