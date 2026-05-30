@@ -1,10 +1,11 @@
+from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
-from .models import Partido, Apuesta, OpcionApuesta
+from .models import Partido, Apuesta, OpcionApuesta, TipoApuesta
 from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer
 
 from apps.servicio.ApiFootball import APIFootballService
@@ -43,9 +44,10 @@ class PartidoViewSet(ModelViewSet):
 
         return Response({"resultado":f"partido {partido} terminado", "mensaje":"Apuestas ejecutadas correctamente"},status=HTTP_200_OK)
 
+@transaction.atomic
 def resolver_apuesta_resultado(apuesta,opcion_apuesta):
     #necesito el partido
-    partido = Partido.objects.get(id=opcion_apuesta.partido.id)
+    partido = opcion_apuesta.partido
     print(f'PARTIDO RESOLVER APUESTA POR RESULTADO {partido}')
 
     #comparo el resultado del partido y la prediccion que figura en la apuesta
@@ -53,7 +55,7 @@ def resolver_apuesta_resultado(apuesta,opcion_apuesta):
     #caso contrario toodo va para la casa de apuestas
     if opcion_apuesta.prediccion == partido.resultado_partido:
         print(f'tipo de apuesta: {opcion_apuesta.tipo_apuesta}')
-        cliente = Usuario.objects.get(id=apuesta.apostado_por.id)
+        cliente = apuesta.apostado_por
         print(f'cliente: {cliente.username}')
         ## --> considero que la forma mas realista de hacerlo es que la casa se quede un porcentaje del premio
         #porque supongo que asi funcionan las casas de apuestas ellos ganan siempre
@@ -71,6 +73,7 @@ def resolver_apuesta_resultado(apuesta,opcion_apuesta):
     else:
         apuesta.ganancia_casa = apuesta.monto_apostado
         print(f"ganancia de la casa {apuesta.ganancia_casa}")
+        apuesta.estado = "perdida"
         apuesta.save()
 
 
@@ -82,17 +85,25 @@ def resolver_apuesta_resultado(apuesta,opcion_apuesta):
 #
 
 def resolver_apuesta(id_partido):
-    apuestas=Apuesta.objects.filter(partido=id_partido)
+    apuestas=(
+        Apuesta.objects.filter(
+            opcion_apuesta__partido=id_partido,
+            estado="pendiente"
+        ).select_related(#optimizador de consultas de django
+            "opcion_apuesta",
+            "opcion_apuesta__partido"
+        )
+    )
 
     for apuesta in apuestas:
 
-        opcion_apuesta = OpcionApuesta.objects.get(id=apuesta.opcion_apuesta.id)
+        opcion = apuesta.opcion_apuesta
 
-        if opcion_apuesta.tipo_apuesta == 'resultado':
-            resolver_apuesta_resultado(apuesta,opcion_apuesta)
+        if opcion.tipo_apuesta == TipoApuesta.RESULTADO:
+            resolver_apuesta_resultado(apuesta,opcion)
         else:
             #Aca se deberia ampliar la logica para los otros tipos de apuestas
-            print(f'La apuesta no es por resultado es por {opcion_apuesta.tipo_apuesta}')
+            print(f'La apuesta no es por resultado es por {opcion.tipo_apuesta}')
 
 
 
@@ -106,7 +117,6 @@ class ApuestaViewSet(ModelViewSet):
     serializer_class = ApuestaSerializer
 
     def perform_create(self, serializer):
-
 
         if serializer.is_valid():
             usuario = Usuario.objects.get(id=1)

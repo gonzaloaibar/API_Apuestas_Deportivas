@@ -1,6 +1,50 @@
 from rest_framework import serializers
 from .models import Partido, Apuesta, OpcionApuesta
 
+#simplemente existe para ser usada por PartidoSerializer y mostrar esos dos atributos de la opcion de apuesta
+class OpcionApuestaAuxiliarSerializer(serializers.ModelSerializer):
+    prediccion = serializers.CharField(
+        source='get_prediccion_display',
+        read_only = True
+    )
+
+    class Meta:
+        model = OpcionApuesta
+        fields = [
+            "prediccion",
+            "multiplicador"
+        ]
+
+
+class OpcionApuestaSerializer(serializers.ModelSerializer):
+
+    descripcion = serializers.SerializerMethodField()
+    partido_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model=OpcionApuesta
+        fields = [
+            "id",
+            "tipo_apuesta",
+            "multiplicador",
+            "monto_minimo",
+            "partido_id",
+            "descripcion"
+        ]
+
+    def get_partido_id(self, obj):
+        return(
+            f"{obj.partido.id}"
+        )
+
+    def get_descripcion(self, obj):
+        return (
+            f"{obj.partido.equipo_local} vs "
+            f"{obj.partido.equipo_visitante} - "
+            f"{obj.get_prediccion_display()}"
+        )
+
+
 
 class PartidoSerializer(serializers.ModelSerializer):
 
@@ -10,27 +54,85 @@ class PartidoSerializer(serializers.ModelSerializer):
         source="get_resultado_partido_display",
         read_only=True
     )
+
+    opciones_apuesta = OpcionApuestaAuxiliarSerializer(
+        many=True,
+        read_only=True
+    )
+
     class Meta:
         model = Partido
-        fields = '__all__'
+        fields = [
+            "id",
+            "equipo_local",
+            "equipo_visitante",
+            "estado",
+            "fecha",
+            "opciones_apuesta",
+            "resultado_partido"
+        ]
 
-class OpcionApuestaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=OpcionApuesta
-        fields='__all__'
 
 
 class ApuestaSerializer(serializers.ModelSerializer):
 
+    opcion_apuesta = serializers.PrimaryKeyRelatedField(
+        queryset=OpcionApuesta.objects.all(),
+        write_only=True
+    )
+
+    prediccion=serializers.SerializerMethodField()
+
+    partido=serializers.SerializerMethodField()
+
     class Meta:
         model=Apuesta
-        fields='__all__'
-        read_only_fields = ['estado', 'ganancia_casa', 'ganancia_cliente']
+        fields=[
+            "id",
+            "opcion_apuesta",
+            "monto_apostado",
+            "estado",
+            "ganancia_cliente",
+            "ganancia_casa",
+            "fecha",
+            "apostado_por",
+            "partido",
+            "prediccion"
+        ]
+        read_only_fields = ['id', 'ganancia_cliente', 'ganancia_casa', 'estado']
 
 
+    def get_prediccion(self, obj):
+        return(
+            f"{obj.opcion_apuesta.get_prediccion_display()} - "
+            f"{obj.opcion_apuesta.multiplicador}"
+        )
 
-    # def create(self, validated_data):
-    #     usuario = validated_data.pop('usuario', None)
-    #     apuesta = Apuesta.objects.create(**validated_data)
-    #
-    #     return apuesta
+    def get_partido(self, obj):
+        return(
+            f"{obj.opcion_apuesta.partido.equipo_local} vs "
+            f"{obj.opcion_apuesta.partido.equipo_visitante} - "
+            f"ID = {obj.opcion_apuesta.partido.id}"
+        )
+
+    #validacion para que solo se pueda apostar sobre un partido pendiente
+    def validate_opcion_apuesta(self, opcion):
+        if opcion.partido.estado != "pendiente":
+            raise serializers.ValidationError(
+                "No se puede apostar sobre un partido finalizado."
+            )
+
+        return opcion
+
+    #validacion para que el monto apostado sea mayor al monto minimo
+    def validate(self, attrs):
+
+        opcion = attrs["opcion_apuesta"]
+        monto = attrs["monto_apostado"]
+
+        if monto < opcion.monto_minimo:
+            raise serializers.ValidationError(
+                f"El monto mínimo es {opcion.monto_minimo}"
+            )
+
+        return attrs

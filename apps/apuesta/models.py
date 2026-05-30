@@ -42,12 +42,17 @@ class Prediccion(models.TextChoices):
     MAS_5_GOLES = "mas_5_goles", "Más de 5 goles"
 
 class OpcionApuesta(models.Model):
-    partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
+    partido = models.ForeignKey(Partido, on_delete=models.CASCADE, related_name="opciones_apuesta")
     tipo_apuesta = models.CharField(max_length=100, choices=TipoApuesta.choices,blank=False,null=False)
     prediccion = models.CharField(max_length=100, choices=Prediccion.choices,blank=True,null=True)
     multiplicador=models.DecimalField(max_digits=3, decimal_places=2, null=False)
     monto_minimo=models.DecimalField(max_digits=20, decimal_places=2, null=False, default=0)
 
+    def __str__(self):
+        return ( f"{self.partido.equipo_local} vs "
+        f"{self.partido.equipo_visitante} - "
+        f"{self.get_prediccion_display()} "
+        f"(Cuota {self.multiplicador})")
 
 class Apuesta(models.Model):
     ESTADOS = (
@@ -57,10 +62,9 @@ class Apuesta(models.Model):
     )
 
     apostado_por=models.ForeignKey("usuario.Usuario",on_delete=models.CASCADE,  related_name='apuestas')
-    partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
+    #partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
     opcion_apuesta = models.ForeignKey(OpcionApuesta, on_delete=models.CASCADE)
     monto_apostado= models.DecimalField(max_digits=10, decimal_places=2)
-    #prediccion_cliente = models.CharField(max_length=100, choices=Prediccion.choices,blank=True,null=True)
     estado = models.CharField(default="pendiente", max_length=100, choices=ESTADOS)
     ganancia_cliente = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ganancia_casa = models.DecimalField(max_digits=10, decimal_places=2, default=0)
