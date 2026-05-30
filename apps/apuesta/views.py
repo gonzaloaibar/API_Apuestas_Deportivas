@@ -29,7 +29,7 @@ class PartidoViewSet(ModelViewSet):
         fecha_desde = request.data.get('from')
         fecha_hasta = request.data.get('to')
         APIFootballService.importar(fecha_desde, fecha_hasta)
-        return Response({'mensaje': 'funciona'},status=status.HTTP_200_OK)
+        return Response({'mensaje': 'se importo correctamente los partidos'},status=status.HTTP_200_OK)
 
     @action(methods=['patch'], detail=True)
     def terminar_partido(self, request, pk=None):

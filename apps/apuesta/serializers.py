@@ -71,9 +71,21 @@ class PartidoSerializer(serializers.ModelSerializer):
             "estado",
             "fecha",
             "opciones_apuesta",
-            "resultado_partido"
+            "resultado_partido",
+            "goles_local",
+            "goles_visitante",
         ]
 
+    #uso to_representation para que esos campos devuelvan null si la apuesta sigue pendiente
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        if instance.estado == "pendiente":
+            data["resultado_partido"] = None
+            data["goles_local"] = None
+            data["goles_visitante"] = None
+
+        return data
 
 
 class ApuestaSerializer(serializers.ModelSerializer):
