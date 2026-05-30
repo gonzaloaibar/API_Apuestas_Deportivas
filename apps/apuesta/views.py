@@ -1,12 +1,4 @@
-from urllib.error import HTTPError
-
-import requests
-
-from django.conf import settings
-from django.contrib.auth.models import AbstractUser
-from django.db.models import Model
-
-from rest_framework import status, response
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet
@@ -41,34 +33,68 @@ class PartidoViewSet(ModelViewSet):
     @action(methods=['patch'], detail=True)
     def terminar_partido(self, request, pk=None):
         partido=self.get_object()
-        print(partido)
-        partido.estado="finalizado"
+        print(partido.resultado_partido)
 
 
-        #resolver_apuesta(partido.pk, partido.resultado_partido)
+        resolver_apuesta(partido.pk)
+
+        partido.estado = "finalizado"
         partido.save()
-        return Response({"estado":"partido terminado"})
 
-# def resolver_apuesta_resultado():
-#     print("resolver_resultado")
-#     pass
-#
+        return Response({"resultado":f"partido {partido} terminado", "mensaje":"Apuestas ejecutadas correctamente"},status=HTTP_200_OK)
+
+def resolver_apuesta_resultado(apuesta,opcion_apuesta):
+    #necesito el partido
+    partido = Partido.objects.get(id=opcion_apuesta.partido.id)
+    print(f'PARTIDO RESOLVER APUESTA POR RESULTADO {partido}')
+
+    #comparo el resultado del partido y la prediccion que figura en la apuesta
+    #si el usuario acerto debo traerlo y agregar a su saldo el premio de la apuesta
+    #caso contrario toodo va para la casa de apuestas
+    if opcion_apuesta.prediccion == partido.resultado_partido:
+        print(f'tipo de apuesta: {opcion_apuesta.tipo_apuesta}')
+        cliente = Usuario.objects.get(id=apuesta.apostado_por.id)
+        print(f'cliente: {cliente.username}')
+        ## --> considero que la forma mas realista de hacerlo es que la casa se quede un porcentaje del premio
+        #porque supongo que asi funcionan las casas de apuestas ellos ganan siempre
+        premio = apuesta.monto_apostado * opcion_apuesta.multiplicador
+        apuesta.ganancia_cliente = premio
+
+        print(f'Ganania del cliente: {apuesta.ganancia_cliente}')
+        #le agrego el saldo al cliente
+        cliente.saldo += apuesta.ganancia_cliente
+        print(f'nuevo saldo del cliente: {cliente.saldo}')
+        cliente.save()
+        #cambio el estado de la apuesta
+        apuesta.estado = 'ganada'
+        apuesta.save()
+    else:
+        apuesta.ganancia_casa = apuesta.monto_apostado
+        print(f"ganancia de la casa {apuesta.ganancia_casa}")
+        apuesta.save()
+
+
+
 # def resolver_apuesta_goles():
 #     print("goles")
 #     pass
 #
 #
-# def resolver_apuesta(id_partido, resultado_partido):
-#
-#     apuestas=Apuesta.objects.filter(partido=id_partido)
-#     print(apuestas)
-#     for apuesta in apuestas:
-#         tipo=TipoApuesta.objects.get(nombre=apuesta.tipo_apuesta)
-#         print(tipo)
-#         if tipo.pk == 1:
-#             resolver_apuesta_resultado()
-#         elif tipo.pk == 2:
-#             resolver_apuesta_goles()
+
+def resolver_apuesta(id_partido):
+    apuestas=Apuesta.objects.filter(partido=id_partido)
+
+    for apuesta in apuestas:
+
+        opcion_apuesta = OpcionApuesta.objects.get(id=apuesta.opcion_apuesta.id)
+
+        if opcion_apuesta.tipo_apuesta == 'resultado':
+            resolver_apuesta_resultado(apuesta,opcion_apuesta)
+        else:
+            #Aca se deberia ampliar la logica para los otros tipos de apuestas
+            print(f'La apuesta no es por resultado es por {opcion_apuesta.tipo_apuesta}')
+
+
 
 
 class OpcionApuestaViewSet(ModelViewSet):

@@ -33,9 +33,9 @@ class TipoApuesta(models.TextChoices):
     GOLES = "cantidad_goles", "Cantidad de goles"
 
 class Prediccion(models.TextChoices):
-    GANA_LOCAL = "gana_local", "Gana Local"
-    EMPATE = "empate", "Empate"
-    GANA_VISITANTE = "gana_visitante", "Gana Visitante"
+    GANA_LOCAL = "L", "Gana Local"
+    EMPATE = "E", "Empate"
+    GANA_VISITANTE = "v", "Gana Visitante"
 
     MAS_1_GOL = "mas_1_gol", "Más de 1 gol"
     MAS_3_GOLES = "mas_3_goles", "Más de 3 goles"
@@ -60,12 +60,12 @@ class Apuesta(models.Model):
     partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
     opcion_apuesta = models.ForeignKey(OpcionApuesta, on_delete=models.CASCADE)
     monto_apostado= models.DecimalField(max_digits=10, decimal_places=2)
-    #cuota_aplicada = models.DecimalField(max_digits=10, decimal_places=2)
+    #prediccion_cliente = models.CharField(max_length=100, choices=Prediccion.choices,blank=True,null=True)
     estado = models.CharField(default="pendiente", max_length=100, choices=ESTADOS)
     ganancia_cliente = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ganancia_casa = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     fecha = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.opcion_apuesta.nombre},{self.partido},{self.estado},{self.ganancia_casa},{self.fecha}'
+        return f'{self.opcion_apuesta.tipo_apuesta},{self.partido},{self.estado},{self.ganancia_casa},{self.fecha}'
 
