@@ -5,7 +5,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
-from .models import Partido, Apuesta, OpcionApuesta, TipoApuesta
+from .models import Partido, Apuesta, OpcionApuesta, TipoApuesta, Prediccion
 from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer
 
 from apps.servicio.ApiFootball import APIFootballService
@@ -76,13 +76,48 @@ def resolver_apuesta_resultado(apuesta,opcion_apuesta):
         apuesta.estado = "perdida"
         apuesta.save()
 
+def resolver_apuesta_ganada(apuesta, opcion_apuesta):
+    cliente = apuesta.apostado_por
+
+    premio = apuesta.monto_apostado * opcion_apuesta.multiplicador
+    apuesta.ganancia_cliente = premio
+
+    cliente.saldo += apuesta.ganancia_cliente
+
+    cliente.save()
+    # cambio el estado de la apuesta
+    apuesta.estado = 'ganada'
+    apuesta.save()
 
 
-# def resolver_apuesta_goles():
-#     print("goles")
-#     pass
-#
-#
+def resolver_apuesta_perdida(apuesta):
+    apuesta.ganancia_casa = apuesta.monto_apostado
+
+    apuesta.estado = "perdida"
+    apuesta.save()
+
+def resolver_apuesta_goles(apuesta, opcion_apuesta):
+    partido = opcion_apuesta.partido
+    goles_totales = partido.goles_local + partido.goles_visitante
+
+    prediccion = opcion_apuesta.prediccion
+    acierto = False
+
+    if prediccion == Prediccion.MAS_1_GOL:
+        acierto = goles_totales > 1
+    if prediccion == Prediccion.MAS_3_GOLES:
+        acierto = goles_totales >3
+    if prediccion == Prediccion.MAS_5_GOLES:
+        aciertp = goles_totales > 5
+
+    if acierto:
+        resolver_apuesta_ganada(apuesta, opcion_apuesta)
+    else:
+        resolver_apuesta_perdida(apuesta)
+
+
+
+
 
 def resolver_apuesta(id_partido):
     apuestas=(
@@ -101,10 +136,11 @@ def resolver_apuesta(id_partido):
 
         if opcion.tipo_apuesta == TipoApuesta.RESULTADO:
             resolver_apuesta_resultado(apuesta,opcion)
-        else:
-            #Aca se deberia ampliar la logica para los otros tipos de apuestas
-            print(f'La apuesta no es por resultado es por {opcion.tipo_apuesta}')
-
+        # else:
+        #     #Aca se deberia ampliar la logica para los otros tipos de apuestas
+        #     print(f'La apuesta no es por resultado es por {opcion.tipo_apuesta}')
+        elif opcion.tipo_apuesta == TipoApuesta.GOLES:
+            resolver_apuesta_goles(apuesta,opcion)
 
 
 

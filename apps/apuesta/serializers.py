@@ -26,6 +26,8 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "tipo_apuesta",
+            "prediccion",
+            "partido",
             "multiplicador",
             "monto_minimo",
             "partido_id",
