@@ -108,7 +108,7 @@ def resolver_apuesta_goles(apuesta, opcion_apuesta):
     if prediccion == Prediccion.MAS_3_GOLES:
         acierto = goles_totales >3
     if prediccion == Prediccion.MAS_5_GOLES:
-        aciertp = goles_totales > 5
+        acierto = goles_totales > 5
 
     if acierto:
         resolver_apuesta_ganada(apuesta, opcion_apuesta)
