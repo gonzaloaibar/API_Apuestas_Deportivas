@@ -46,6 +46,24 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
             f"{obj.get_prediccion_display()}"
         )
 
+    def validate (self, attrs):
+
+        partido=attrs["partido"]
+        tipo_apuesta=attrs["tipo_apuesta"]
+        prediccion=attrs["prediccion"]
+
+        queryset=OpcionApuesta.objects.filter(partido=partido, tipo_apuesta=tipo_apuesta, prediccion=prediccion)
+
+        #ya existe la instancia y solo la quiero modificar
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        #quiero crear una opcion que ya existe en la db
+        if queryset.exists():
+            raise serializers.ValidationError(
+                "Ya existe una opcion de apuesta con esa prediccion para ese partido"
+            )
+        return attrs
 
 
 class PartidoSerializer(serializers.ModelSerializer):
@@ -113,7 +131,7 @@ class ApuestaSerializer(serializers.ModelSerializer):
             "partido",
             "prediccion"
         ]
-        read_only_fields = ['id', 'ganancia_cliente', 'ganancia_casa', 'estado']
+        read_only_fields = ['id', 'ganancia_cliente', 'ganancia_casa', 'estado', 'apostado_por']
 
 
     def get_prediccion(self, obj):

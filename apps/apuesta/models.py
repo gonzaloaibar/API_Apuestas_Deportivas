@@ -35,7 +35,7 @@ class TipoApuesta(models.TextChoices):
 class Prediccion(models.TextChoices):
     GANA_LOCAL = "L", "Gana Local"
     EMPATE = "E", "Empate"
-    GANA_VISITANTE = "v", "Gana Visitante"
+    GANA_VISITANTE = "V", "Gana Visitante"
 
     MAS_1_GOL = "mas_1_gol", "Más de 1 gol"
     MAS_3_GOLES = "mas_3_goles", "Más de 3 goles"
@@ -47,6 +47,21 @@ class OpcionApuesta(models.Model):
     prediccion = models.CharField(max_length=100, choices=Prediccion.choices,blank=True,null=True)
     multiplicador=models.DecimalField(max_digits=3, decimal_places=2, null=False)
     monto_minimo=models.DecimalField(max_digits=20, decimal_places=2, null=False, default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                    fields=[
+                        "partido",
+                        "tipo_apuesta",
+                        "prediccion"
+                    ],
+                name="unique_opcion_apuesta_partido",
+                violation_error_message=(
+                    "Ya existe una opción de apuesta con esa predicción para este partido."
+                )
+            )
+        ]
 
     def __str__(self):
         return ( f"{self.partido.equipo_local} vs "
