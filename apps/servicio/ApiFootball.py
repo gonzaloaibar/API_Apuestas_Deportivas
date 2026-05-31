@@ -25,6 +25,14 @@ def definir_resultado_partido(estado_de_partido,goles_local,goles_visitante):
     else:
         return 'E'
 
+#Vamos a comparar la fecha del partido con la fecha simuladada
+def definir_estado(fecha_partido):
+    fecha_simulada = getattr(settings, "FECHA_SIMULADA", None)
+    if fecha_partido < fecha_simulada:
+        return 'finalizado'
+    else:
+        return 'pendiente'
+
 class APIFootballService:
     @staticmethod
     def importar(from_date, to_date):
@@ -53,8 +61,6 @@ class APIFootballService:
 
         partidos_creados = 0
 
-        #print(len(data['response']))
-
         for item in data['response']:
             fixture = item['fixture']
             teams = item['teams']
@@ -68,11 +74,11 @@ class APIFootballService:
                     'fecha': fixture['date'],
                     'goles_local': goals['home'],
                     'goles_visitante': goals['away'],
-                    'estado': 'pendiente',
+                    'estado': definir_estado(fixture['date']),
                     'resultado_partido': definir_resultado_partido(fixture['status']['short'],item['goals']['home'],item['goals']['away'])
                 }
             )
-            #print(item)
+
             if created:
                 partidos_creados += 1
 

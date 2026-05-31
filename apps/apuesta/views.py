@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
@@ -12,6 +14,20 @@ from apps.servicio.ApiFootball import APIFootballService
 from ..usuario.models import Usuario
 from ..usuario.excepciones import SaldoInsuficienteException
 
+from django.conf import settings
+from django.utils.dateparse import parse_datetime
+
+#Esta funcion nos va a servir para simular la fecha desde una vvariable de entorno
+#como la variable no se sube al gtihub entonces devuelvo la fecha actual
+#pero para que funcione la api completamente se deberia tener la version premium de
+#APIFootball
+def obtener_fecha_actual():
+    fecha_simulada = getattr(settings, "FECHA_SIMULADA", None)
+
+    if fecha_simulada:
+        return parse_datetime(fecha_simulada)
+
+    return datetime.now()
 
 class PartidoViewSet(ModelViewSet):
 
@@ -24,6 +40,7 @@ class PartidoViewSet(ModelViewSet):
         fecha_desde = request.data.get('from')
         fecha_hasta = request.data.get('to')
         APIFootballService.importar(fecha_desde, fecha_hasta)
+
         return Response({'mensaje': 'se importo correctamente los partidos'},status=status.HTTP_200_OK)
 
     @action(methods=['patch'], detail=True)

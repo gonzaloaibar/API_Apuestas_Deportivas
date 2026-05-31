@@ -27,6 +27,8 @@ SECRET_KEY = 'django-insecure-aopapjnl%h1^*4k%si9arx$ix#h-ownt1b)=-tmmpsr)e=*b2d
 #API_FOOTBALL_KEY = os.getenv('API_FOOTBALL_KEY')
 API_FOOTBALL_KEY=config('API_FOOTBALL_KEY')
 
+FECHA_SIMULADA = config('FECHA_HORA_SIMULADA')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -120,6 +122,7 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
 
 
 # Static files (CSS, JavaScript, Images)
