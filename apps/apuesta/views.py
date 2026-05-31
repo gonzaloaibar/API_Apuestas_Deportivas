@@ -1,6 +1,7 @@
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status,filters
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT
 from rest_framework.viewsets import ModelViewSet
@@ -16,6 +17,8 @@ from ..usuario.excepciones import SaldoInsuficienteException
 
 
 class PartidoViewSet(ModelViewSet):
+
+    permission_classes = [IsAuthenticated]
 
     queryset = Partido.objects.all()
     serializer_class = PartidoSerializer
@@ -120,6 +123,9 @@ def resolver_apuesta(id_partido):
 
 
 class OpcionApuestaViewSet(ModelViewSet):
+        #Porque un usuario sin cuenta podria querer ver que onda con la aplicacion
+        permission_classes = [IsAuthenticatedOrReadOnly]
+
         queryset = OpcionApuesta.objects.all()
         serializer_class = OpcionApuestaSerializer
 
@@ -128,6 +134,8 @@ def comprobar_saldo(Usuario,monto_apostado):
         raise SaldoInsuficienteException()
 
 class ApuestaViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+
     queryset = Apuesta.objects.all()
     serializer_class = ApuestaSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
