@@ -1,8 +1,6 @@
-from datetime import datetime
-from django.utils import timezone
-
 from django.db import transaction
-from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status,filters
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT
 from rest_framework.viewsets import ModelViewSet
@@ -16,14 +14,13 @@ from apps.servicio.ApiFootball import APIFootballService
 from ..usuario.models import Usuario
 from ..usuario.excepciones import SaldoInsuficienteException
 
-from django.conf import settings
-
-
 
 class PartidoViewSet(ModelViewSet):
 
     queryset = Partido.objects.all()
     serializer_class = PartidoSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    ordering_fields = ['estado']
 
     @action(methods=['post'], detail=False)
     def importar_partidos(self, request):

@@ -1,3 +1,4 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers
 from .models import Partido, Apuesta, OpcionApuesta
 
