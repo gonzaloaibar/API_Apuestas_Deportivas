@@ -20,7 +20,7 @@ class PartidoViewSet(ModelViewSet):
     queryset = Partido.objects.all()
     serializer_class = PartidoSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    ordering_fields = ['estado']
+    ordering_fields = ['estado','fecha']
 
     @action(methods=['post'], detail=False)
     def importar_partidos(self, request):
@@ -130,6 +130,8 @@ def comprobar_saldo(Usuario,monto_apostado):
 class ApuestaViewSet(ModelViewSet):
     queryset = Apuesta.objects.all()
     serializer_class = ApuestaSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    ordering_fields = ['estado', 'fecha']
 
     def perform_create(self, serializer):
         usuario = Usuario.objects.get(id=1)
