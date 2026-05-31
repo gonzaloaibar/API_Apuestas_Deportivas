@@ -156,32 +156,42 @@ class ApuestaViewSet(ModelViewSet):
 
         serializer.save(apostado_por=usuario)
 
+
     @action(methods={'delete'},detail=True)
     def eliminar_apuesta(self,request,pk=None):
+        apuesta = self.get_object()
+
+        if apuesta.estado != 'pendiente':
+            return Response(
+                {'error': 'Solo se pueden eliminar apuestas pendientes.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        #la fecha simulada se debe normalizar porque es un string
+        #si la vamos a comparar con objectos que vienen de la BD tenemos que hacerlo
+        #se puede armar una funcion extra si hay tiempo
         fecha_simulada = getattr(settings, "FECHA_SIMULADA", None)
         fecha_simulada = datetime.fromisoformat(fecha_simulada)
         if timezone.is_naive(fecha_simulada):
             fecha_simulada = timezone.make_aware(fecha_simulada)
 
-        print(f'fecha simulada: {fecha_simulada} | tipo: {type(fecha_simulada)}')
-        apuesta = self.get_object()
 
-        opcion_apuesta = apuesta.opcion_apuesta
+        fecha_partido = apuesta.opcion_apuesta.partido.fecha
 
-        partido = opcion_apuesta.partido
+        if fecha_1_mayor_fecha_2(fecha_simulada, fecha_partido):
+            return Response(
+                {'error': f'No se puede eliminar la apuesta {pk}, el partido ya comenzó.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        fecha_partido = partido.fecha
+        #Al usuario se le devuelve el monto apostado,
+        #se va a tener que controlas y aclarar si es que la casa se queda un porcentaje
+        usuario = apuesta.apostado_por
+        usuario.saldo += apuesta.monto_apostado
+        usuario.save()
+        apuesta.delete()
 
-        print(f'fecha partido: {fecha_partido} | tipo: {type(fecha_partido)}')
-
-        if fecha_1_mayor_fecha_2(fecha_simulada,fecha_partido):
-            return Response({'mensaje': f'NO se puede borrar la apuesta {pk}'})
-        else:
-            print(f'monto de la apuesta: {apuesta.monto_apostado}')
-            usuario = Usuario.objects.get(id=apuesta.apostado_por.id)
-            print(f'saldo actual del usaurio: {usuario.saldo}')
-            usuario.saldo += apuesta.monto_apostado
-            print(f'nuevo saldo del usaurio: {usuario.saldo}')
-            usuario.save()
-            apuesta.delete()
-            return Response({'mensaje':'se elminino la apuesta'},status=HTTP_204_NO_CONTENT)
+        return Response(
+            {'mensaje': 'Apuesta eliminada correctamente.'},
+            status=status.HTTP_204_NO_CONTENT
+        )
