@@ -48,34 +48,15 @@ class PartidoViewSet(ModelViewSet):
 def resolver_apuesta_resultado(apuesta,opcion_apuesta):
     #necesito el partido
     partido = opcion_apuesta.partido
-    print(f'PARTIDO RESOLVER APUESTA POR RESULTADO {partido}')
 
-    #comparo el resultado del partido y la prediccion que figura en la apuesta
-    #si el usuario acerto debo traerlo y agregar a su saldo el premio de la apuesta
-    #caso contrario toodo va para la casa de apuestas
     if opcion_apuesta.prediccion == partido.resultado_partido:
-        print(f'tipo de apuesta: {opcion_apuesta.tipo_apuesta}')
-        cliente = apuesta.apostado_por
-        print(f'cliente: {cliente.username}')
-        ## --> considero que la forma mas realista de hacerlo es que la casa se quede un porcentaje del premio
-        #porque supongo que asi funcionan las casas de apuestas ellos ganan siempre
-        premio = apuesta.monto_apostado * opcion_apuesta.multiplicador
-        apuesta.ganancia_cliente = premio
-
-        print(f'Ganania del cliente: {apuesta.ganancia_cliente}')
-        #le agrego el saldo al cliente
-        cliente.saldo += apuesta.ganancia_cliente
-        print(f'nuevo saldo del cliente: {cliente.saldo}')
-        cliente.save()
-        #cambio el estado de la apuesta
-        apuesta.estado = 'ganada'
-        apuesta.save()
+        resolver_apuesta_ganada(apuesta,opcion_apuesta)
     else:
-        apuesta.ganancia_casa = apuesta.monto_apostado
-        print(f"ganancia de la casa {apuesta.ganancia_casa}")
-        apuesta.estado = "perdida"
-        apuesta.save()
+        resolver_apuesta_perdida(apuesta)
 
+#comparo el resultado del partido y la prediccion que figura en la apuesta
+#si el usuario acerto debo traerlo y agregar a su saldo el premio de la apuesta
+#caso contrario toodo va para la casa de apuestas
 def resolver_apuesta_ganada(apuesta, opcion_apuesta):
     cliente = apuesta.apostado_por
 
@@ -116,9 +97,6 @@ def resolver_apuesta_goles(apuesta, opcion_apuesta):
         resolver_apuesta_perdida(apuesta)
 
 
-
-
-
 def resolver_apuesta(id_partido):
     apuestas=(
         Apuesta.objects.filter(
@@ -136,12 +114,9 @@ def resolver_apuesta(id_partido):
 
         if opcion.tipo_apuesta == TipoApuesta.RESULTADO:
             resolver_apuesta_resultado(apuesta,opcion)
-        # else:
-        #     #Aca se deberia ampliar la logica para los otros tipos de apuestas
-        #     print(f'La apuesta no es por resultado es por {opcion.tipo_apuesta}')
+
         elif opcion.tipo_apuesta == TipoApuesta.GOLES:
             resolver_apuesta_goles(apuesta,opcion)
-
 
 
 class OpcionApuestaViewSet(ModelViewSet):
