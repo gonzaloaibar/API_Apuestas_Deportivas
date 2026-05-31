@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_200_OK
 from rest_framework.views import APIView
@@ -6,8 +7,6 @@ from apps.usuario.models import Usuario
 from apps.usuario.serializers import UsuarioSerializer
 from rest_framework import status
 from decimal import Decimal
-
-
 
 class RegistroUsuarioAPIView(APIView):
     
@@ -21,6 +20,8 @@ class RegistroUsuarioAPIView(APIView):
             return Response(serializer.errors,status.HTTP_400_BAD_REQUEST)
 
 class TraerUsuariosAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self,request):
         usuarios = Usuario.objects.all()
         serializer = UsuarioSerializer(usuarios,many=True)
@@ -32,6 +33,8 @@ class TraerUsuariosAPIView(APIView):
 #con el saldo que quiere cargar el usuario, por lo tanto no es una actualizacion es una
 #agregacion.
 class CargarSaldoAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
 
     def post(self,request,pk=None):
         usuario = Usuario.objects.get(pk=pk)
