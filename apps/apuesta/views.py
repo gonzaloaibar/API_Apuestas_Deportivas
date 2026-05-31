@@ -10,18 +10,13 @@ from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSeri
 
 from apps.servicio.ApiFootball import APIFootballService
 from ..usuario.models import Usuario
+from ..usuario.excepciones import SaldoInsuficienteException
 
 
 class PartidoViewSet(ModelViewSet):
 
     queryset = Partido.objects.all()
     serializer_class = PartidoSerializer
-
-    # @action(detail=False, methods=['post'])
-    # def importar(self, request):
-    #     return Response({
-    #         'mensaje': 'Funciona'
-    #     })
 
     @action(methods=['post'], detail=False)
     def importar_partidos(self, request):
@@ -123,15 +118,21 @@ class OpcionApuestaViewSet(ModelViewSet):
         queryset = OpcionApuesta.objects.all()
         serializer_class = OpcionApuestaSerializer
 
+def comprobar_saldo(Usuario,monto_apostado):
+    if Usuario.saldo < monto_apostado:
+        raise SaldoInsuficienteException()
+
 class ApuestaViewSet(ModelViewSet):
     queryset = Apuesta.objects.all()
     serializer_class = ApuestaSerializer
 
     def perform_create(self, serializer):
+        usuario = Usuario.objects.get(id=1)
 
-        if serializer.is_valid():
-            usuario = Usuario.objects.get(id=1)
-            serializer.save(apostado_por=usuario)
+        monto_apostado = serializer.validated_data['monto_apostado']
+        comprobar_saldo(usuario,monto_apostado)
+        usuario.saldo -= monto_apostado
 
-            return Response({"data":"guardado"},status=HTTP_200_OK)
-        return Response(serializer.error,status=HTTP_400_BAD_REQUEST)
+        usuario.save()
+
+        serializer.save(apostado_por=usuario)
