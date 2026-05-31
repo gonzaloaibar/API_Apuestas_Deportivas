@@ -10,26 +10,15 @@ from rest_framework.decorators import action
 
 from .models import Partido, Apuesta, OpcionApuesta, TipoApuesta, Prediccion
 from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer
-from .servicios import fecha_1_mayor_fecha_2
+from .servicios import fecha_1_mayor_fecha_2, obtener_fecha_actual
 
 from apps.servicio.ApiFootball import APIFootballService
 from ..usuario.models import Usuario
 from ..usuario.excepciones import SaldoInsuficienteException
 
 from django.conf import settings
-from django.utils.dateparse import parse_datetime
 
-#Esta funcion nos va a servir para simular la fecha desde una vvariable de entorno
-#como la variable no se sube al gtihub entonces devuelvo la fecha actual
-#pero para que funcione la api completamente se deberia tener la version premium de
-#APIFootball
-def obtener_fecha_actual():
-    fecha_simulada = getattr(settings, "FECHA_SIMULADA", None)
 
-    if fecha_simulada:
-        return parse_datetime(fecha_simulada)
-
-    return datetime.now()
 
 class PartidoViewSet(ModelViewSet):
 
@@ -170,12 +159,7 @@ class ApuestaViewSet(ModelViewSet):
         #la fecha simulada se debe normalizar porque es un string
         #si la vamos a comparar con objectos que vienen de la BD tenemos que hacerlo
         #se puede armar una funcion extra si hay tiempo
-        fecha_simulada = getattr(settings, "FECHA_SIMULADA", None)
-        fecha_simulada = datetime.fromisoformat(fecha_simulada)
-        if timezone.is_naive(fecha_simulada):
-            fecha_simulada = timezone.make_aware(fecha_simulada)
-
-
+        fecha_simulada = obtener_fecha_actual()
         fecha_partido = apuesta.opcion_apuesta.partido.fecha
 
         if fecha_1_mayor_fecha_2(fecha_simulada, fecha_partido):
