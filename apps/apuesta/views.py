@@ -37,8 +37,6 @@ class PartidoViewSet(ModelViewSet):
     @action(methods=['patch'], detail=True)
     def terminar_partido(self, request, pk=None):
         partido=self.get_object()
-        print(partido.resultado_partido)
-
 
         resolver_apuesta(partido.pk)
 
