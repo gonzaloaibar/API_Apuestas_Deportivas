@@ -1,6 +1,8 @@
 import requests
 from django.conf import settings
 from apps.apuesta.models import Partido
+from apps.apuesta.servicios import fecha_1_mayor_fecha_2
+
 
 def definir_resultado_partido(estado_de_partido,goles_local,goles_visitante):
     # if fixture['status']['short'] != 'FT':
@@ -25,10 +27,12 @@ def definir_resultado_partido(estado_de_partido,goles_local,goles_visitante):
     else:
         return 'E'
 
+
 #Vamos a comparar la fecha del partido con la fecha simuladada
 def definir_estado(fecha_partido):
     fecha_simulada = getattr(settings, "FECHA_SIMULADA", None)
-    if fecha_partido < fecha_simulada:
+
+    if fecha_1_mayor_fecha_2(fecha_simulada,fecha_partido):
         return 'finalizado'
     else:
         return 'pendiente'

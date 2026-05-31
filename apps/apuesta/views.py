@@ -1,14 +1,16 @@
 from datetime import datetime
+from django.utils import timezone
 
 from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
 from .models import Partido, Apuesta, OpcionApuesta, TipoApuesta, Prediccion
 from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer
+from .servicios import fecha_1_mayor_fecha_2
 
 from apps.servicio.ApiFootball import APIFootballService
 from ..usuario.models import Usuario
@@ -153,3 +155,33 @@ class ApuestaViewSet(ModelViewSet):
         usuario.save()
 
         serializer.save(apostado_por=usuario)
+
+    @action(methods={'delete'},detail=True)
+    def eliminar_apuesta(self,request,pk=None):
+        fecha_simulada = getattr(settings, "FECHA_SIMULADA", None)
+        fecha_simulada = datetime.fromisoformat(fecha_simulada)
+        if timezone.is_naive(fecha_simulada):
+            fecha_simulada = timezone.make_aware(fecha_simulada)
+
+        print(f'fecha simulada: {fecha_simulada} | tipo: {type(fecha_simulada)}')
+        apuesta = self.get_object()
+
+        opcion_apuesta = apuesta.opcion_apuesta
+
+        partido = opcion_apuesta.partido
+
+        fecha_partido = partido.fecha
+
+        print(f'fecha partido: {fecha_partido} | tipo: {type(fecha_partido)}')
+
+        if fecha_1_mayor_fecha_2(fecha_simulada,fecha_partido):
+            return Response({'mensaje': f'NO se puede borrar la apuesta {pk}'})
+        else:
+            print(f'monto de la apuesta: {apuesta.monto_apostado}')
+            usuario = Usuario.objects.get(id=apuesta.apostado_por.id)
+            print(f'saldo actual del usaurio: {usuario.saldo}')
+            usuario.saldo += apuesta.monto_apostado
+            print(f'nuevo saldo del usaurio: {usuario.saldo}')
+            usuario.save()
+            apuesta.delete()
+            return Response({'mensaje':'se elminino la apuesta'},status=HTTP_204_NO_CONTENT)

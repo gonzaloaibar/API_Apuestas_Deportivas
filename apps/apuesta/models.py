@@ -86,5 +86,5 @@ class Apuesta(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.opcion_apuesta.tipo_apuesta},{self.partido},{self.estado},{self.ganancia_casa},{self.fecha}'
+        return f'{self.opcion_apuesta.tipo_apuesta},{self.opcion_apuesta.partido},{self.estado},{self.ganancia_casa},{self.fecha}'
 
