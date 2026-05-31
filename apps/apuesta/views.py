@@ -1,7 +1,7 @@
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status,filters
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, DjangoModelPermissions
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT
 from rest_framework.viewsets import ModelViewSet
@@ -124,7 +124,7 @@ def resolver_apuesta(id_partido):
 
 class OpcionApuestaViewSet(ModelViewSet):
         #Porque un usuario sin cuenta podria querer ver que onda con la aplicacion
-        permission_classes = [IsAuthenticatedOrReadOnly]
+        permission_classes = [IsAuthenticated & DjangoModelPermissions]
 
         queryset = OpcionApuesta.objects.all()
         serializer_class = OpcionApuestaSerializer
@@ -142,7 +142,8 @@ class ApuestaViewSet(ModelViewSet):
     ordering_fields = ['estado', 'fecha']
 
     def perform_create(self, serializer):
-        usuario = Usuario.objects.get(id=1)
+
+        usuario = Usuario.objects.get(id=self.request.user.id)
 
         monto_apostado = serializer.validated_data['monto_apostado']
         comprobar_saldo(usuario,monto_apostado)
