@@ -18,7 +18,7 @@ from ..usuario.excepciones import SaldoInsuficienteException
 
 class PartidoViewSet(ModelViewSet):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated & DjangoModelPermissions]
 
     queryset = Partido.objects.all()
     serializer_class = PartidoSerializer
@@ -123,7 +123,8 @@ def resolver_apuesta(id_partido):
 class OpcionApuestaViewSet(ModelViewSet):
         #Porque un usuario sin cuenta podria querer ver que onda con la aplicacion
         permission_classes = [IsAuthenticated & DjangoModelPermissions]
-
+        filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+        ordering_fields = ['estado', 'fecha','partido']
         queryset = OpcionApuesta.objects.all()
         serializer_class = OpcionApuestaSerializer
 
