@@ -157,6 +157,10 @@ class ApuestaViewSet(ModelViewSet):
     def eliminar_apuesta(self,request,pk=None):
         apuesta = self.get_object()
 
+        if request.user.id != apuesta.apostado_por.id:
+            return Response(
+                {'ERROR':'No puede eliminar una apuesta que usted no realizo'},
+                status=status.HTTP_403_FORBIDDEN)
         if apuesta.estado != 'pendiente':
             return Response(
                 {'error': 'Solo se pueden eliminar apuestas pendientes.'},
