@@ -30,7 +30,12 @@ class PartidoViewSet(ModelViewSet):
 
         fecha_desde = request.data.get('from')
         fecha_hasta = request.data.get('to')
-        APIFootballService.importar(fecha_desde, fecha_hasta)
+
+        try:
+            APIFootballService.importar(fecha_desde, fecha_hasta)
+
+        except Exception as e:
+            return Response({'error':e})
 
         return Response({'mensaje': 'se importo correctamente los partidos'},status=status.HTTP_200_OK)
 
