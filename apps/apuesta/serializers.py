@@ -48,6 +48,16 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
             f"{obj.get_prediccion_display()}"
         )
 
+    def get_partido_finalizado(self,obj):
+
+        partido=obj.partido.estado
+        print(partido)
+        if partido=="finalizado":
+            raise serializers.ValidationError(
+                "No puede crear una opcion de apuesta en un partido finalizado"
+            )
+        return obj
+
     def validate (self, attrs):
 
         partido=attrs["partido"]
@@ -68,6 +78,8 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
         return attrs
 
 
+
+
 class PartidoSerializer(serializers.ModelSerializer):
 
     #En el JSON de respuesta se mostrará el texto asigando a ResultadoPartido de models.py
@@ -85,7 +97,7 @@ class PartidoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Partido
         fields = [
-            "uuid",
+            "id",
             "equipo_local",
             "equipo_visitante",
             "estado",
@@ -158,6 +170,19 @@ class ApuestaSerializer(serializers.ModelSerializer):
 
         return opcion
 
+    # def validate_apuesta_repetida(self,apuesta):
+    #     print(apuesta)
+    #     usuario = Apuesta.objects.get(apostado_por=apuesta.apostador_por.id)
+    #     print(usuario)
+    #     apuestas_creadas=Apuesta.filter(apostado_por=usuario)
+    #
+    #     for a in apuestas_creadas:
+    #         if a.partido==apuesta.partido and a.opcion_apuesta==apuesta.opcion_apuesta:
+    #             raise serializers.ValidationError(
+    #                 "ksxkalsjdlkasjlkjd"
+    #             )
+
+
     #validacion para que el monto apostado sea mayor al monto minimo
     def validate(self, attrs):
 
@@ -170,3 +195,4 @@ class ApuestaSerializer(serializers.ModelSerializer):
             )
 
         return attrs
+
