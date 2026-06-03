@@ -156,10 +156,10 @@ class ApuestaViewSet(ModelViewSet):
     queryset = Apuesta.objects.all()
 
     #filtrar apuestas por usuario
-    def get_queryset(self):
-        return Apuesta.objects.filter(
-            apostado_por=self.request.user
-        )
+    # def get_queryset(self):
+    #     return Apuesta.objects.filter(
+    #         apostado_por=self.request.user
+    #     )
     serializer_class = ApuestaSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ['estado', 'fecha']
@@ -177,7 +177,8 @@ class ApuestaViewSet(ModelViewSet):
         serializer.save(apostado_por=usuario)
 
 
-    @action(methods={'delete'},detail=True)
+    @action(methods={'delete'},detail=True,
+            permission_classes=[IsAuthenticated, EsPropietarioApuesta])
     def eliminar_apuesta(self,request,pk=None):
         apuesta = self.get_object()
 
