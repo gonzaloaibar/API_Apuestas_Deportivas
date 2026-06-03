@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 
-from .views import PartidoViewSet, ApuestaViewSet,OpcionApuestaViewSet
+from .api import PartidoViewSet, ApuestaViewSet,OpcionApuestaViewSet
 
 router = DefaultRouter()
 router.register(r'partidos', PartidoViewSet)
