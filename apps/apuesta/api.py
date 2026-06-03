@@ -1,3 +1,4 @@
+from contourpy import contour_generator
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status,filters
@@ -14,7 +15,7 @@ from .servicios import fecha_1_mayor_fecha_2, obtener_fecha_actual
 from apps.servicio.ApiFootball import APIFootballService
 from ..usuario.models import Usuario
 from ..usuario.excepciones import SaldoInsuficienteException
-
+from dotenv import dotenv_values
 
 class PartidoViewSet(ModelViewSet):
 
@@ -39,16 +40,25 @@ class PartidoViewSet(ModelViewSet):
 
         return Response({'mensaje': 'se importo correctamente los partidos'},status=status.HTTP_200_OK)
 
-    @action(methods=['patch'], detail=True)
-    def terminar_partido(self, request, pk=None):
-        partido=self.get_object()
+    @action(methods=['post'], detail=False)
+    def terminar_partido(self, request):
 
-        resolver_apuesta(partido.pk)
+        partidos = Partido.objects.filter(estado='pendiente')
 
-        partido.estado = "finalizado"
-        partido.save()
+        #comprueba un cambio en la fecha simulada
+        config = dotenv_values(".env")
+        fecha_simulada = config.get('FECHA_HORA_SIMULADA')
 
-        return Response({"resultado":f"partido {partido} terminado", "mensaje":"Apuestas ejecutadas correctamente"},status=HTTP_200_OK)
+        try:
+            for partido  in partidos:
+                if fecha_1_mayor_fecha_2(fecha_simulada,partido.fecha):
+                    resolver_apuesta(partido.pk)
+                    partido.estado = "finalizado"
+                    partido.save()
+            #partido=self.get_object()
+        except ValueError:
+            return Response({'error':'Error en la fecha'},status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"resultado":f"partidos terminados", "mensaje":"Apuestas ejecutadas correctamente"},status=HTTP_200_OK)
 
 @transaction.atomic
 def resolver_apuesta_resultado(apuesta,opcion_apuesta):

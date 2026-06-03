@@ -84,7 +84,7 @@ class APIFootballService:
                         'resultado_partido': definir_resultado_partido(fixture['status']['short'],item['goals']['home'],item['goals']['away'])
                     }
                 )
-
+                print(f'partidos_creados {partidos_creados}')
                 if created:
                     partidos_creados += 1
 
