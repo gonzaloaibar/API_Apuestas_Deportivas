@@ -69,7 +69,7 @@ class PartidoViewSet(ModelViewSet):
         try:
             for partido  in partidos:
                 if fecha_1_mayor_fecha_2(fecha_simulada,partido.fecha):
-                    resolver_apuesta(partido.pk)
+                    resolver_apuesta(partido.id)
                     partido.estado = "finalizado"
                     partido.save()
             #partido=self.get_object()
@@ -171,10 +171,10 @@ class ApuestaViewSet(ModelViewSet):
     lookup_field = 'uuid'
 
     #filtrar apuestas por usuario
-    # def get_queryset(self):
-    #     return Apuesta.objects.filter(
-    #         apostado_por=self.request.user
-    #     )
+    def get_queryset(self):
+        return Apuesta.objects.filter(
+            apostado_por=self.request.user
+        )
     serializer_class = ApuestaSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ['estado', 'fecha']
@@ -192,11 +192,11 @@ class ApuestaViewSet(ModelViewSet):
         serializer.save(apostado_por=usuario)
 
 
-    @action(methods={'delete'},detail=True,
+    @action(methods={"delete"},detail=True,
             permission_classes=[IsAuthenticated, EsPropietarioApuesta])
-    def eliminar_apuesta(self,request,pk=None):
+    def eliminar_apuesta(self,request,uuid=None):
         apuesta = self.get_object()
-
+        print("entro al metodo")
         # if request.user.id != apuesta.apostado_por.id:
         #     return Response(
         #         {'ERROR':'No puede eliminar una apuesta que usted no realizo'},
@@ -215,7 +215,7 @@ class ApuestaViewSet(ModelViewSet):
 
         if fecha_1_mayor_fecha_2(fecha_simulada, fecha_partido):
             return Response(
-                {'error': f'No se puede eliminar la apuesta {pk}, el partido ya comenzó.'},
+                {'error': f'No se puede eliminar la apuesta {uuid}, el partido ya comenzó.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

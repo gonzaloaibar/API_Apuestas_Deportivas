@@ -68,6 +68,9 @@ class APIFootballService:
 
             data = response.json()
 
+            if data.get("results") == 0:
+                raise Exception("No hay resultados")
+
             if data.get("errors"):
                 raise Exception(
                     f"API Football: {data['errors']}"
