@@ -34,7 +34,7 @@ def definir_resultado_partido(estado_de_partido,goles_local,goles_visitante):
 def definir_estado(fecha_partido):
     fecha_simulada = obtener_fecha_actual()
 
-    if fecha_1_mayor_fecha_2(fecha_simulada,fecha_partido):
+    if fecha_1_mayor_fecha_2(fecha_partido, fecha_simulada):
         return 'finalizado'
     else:
         return 'pendiente'
@@ -63,7 +63,15 @@ class APIFootballService:
                 params=params
             )
 
+
+            response.raise_for_status()
+
             data = response.json()
+
+            if data.get("errors"):
+                raise Exception(
+                    f"API Football: {data['errors']}"
+                )
 
             partidos_creados = 0
 
@@ -84,9 +92,10 @@ class APIFootballService:
                         'resultado_partido': definir_resultado_partido(fixture['status']['short'],item['goals']['home'],item['goals']['away'])
                     }
                 )
-                print(f'partidos_creados {partidos_creados}')
+
                 if created:
                     partidos_creados += 1
+            print(f'partidos_creados {partidos_creados}')
 
         except requests.exceptions.HTTPError as http_err:
 

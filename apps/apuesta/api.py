@@ -1,5 +1,6 @@
 from contourpy import contour_generator
 from django.db import transaction
+from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status,filters
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, DjangoModelPermissions
@@ -17,6 +18,9 @@ from ..usuario.models import Usuario
 from ..usuario.excepciones import SaldoInsuficienteException
 from dotenv import dotenv_values
 
+from ..usuario.permissions import EsPropietarioApuesta, EsAdministrador
+
+
 class PartidoViewSet(ModelViewSet):
 
     permission_classes = [IsAuthenticated & DjangoModelPermissions]
@@ -28,7 +32,7 @@ class PartidoViewSet(ModelViewSet):
 
     @action(methods=['post'], detail=False)
     def importar_partidos(self, request):
-
+        print("ENTRO AL ENDPOINT")
         fecha_desde = request.data.get('from')
         fecha_hasta = request.data.get('to')
 
@@ -148,9 +152,14 @@ def comprobar_saldo(Usuario,monto_apostado):
         raise SaldoInsuficienteException()
 
 class ApuestaViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [IsAuthenticated, EsPropietarioApuesta]
     queryset = Apuesta.objects.all()
+
+    #filtrar apuestas por usuario
+    def get_queryset(self):
+        return Apuesta.objects.filter(
+            apostado_por=self.request.user
+        )
     serializer_class = ApuestaSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ['estado', 'fecha']
@@ -172,10 +181,10 @@ class ApuestaViewSet(ModelViewSet):
     def eliminar_apuesta(self,request,pk=None):
         apuesta = self.get_object()
 
-        if request.user.id != apuesta.apostado_por.id:
-            return Response(
-                {'ERROR':'No puede eliminar una apuesta que usted no realizo'},
-                status=status.HTTP_403_FORBIDDEN)
+        # if request.user.id != apuesta.apostado_por.id:
+        #     return Response(
+        #         {'ERROR':'No puede eliminar una apuesta que usted no realizo'},
+        #         status=status.HTTP_403_FORBIDDEN)
         if apuesta.estado != 'pendiente':
             return Response(
                 {'error': 'Solo se pueden eliminar apuestas pendientes.'},
@@ -188,7 +197,7 @@ class ApuestaViewSet(ModelViewSet):
         fecha_simulada = obtener_fecha_actual()
         fecha_partido = apuesta.opcion_apuesta.partido.fecha
 
-        if fecha_1_mayor_fecha_2(fecha_simulada, fecha_partido):
+        if fecha_1_mayor_fecha_2(fecha_partido, fecha_simulada):
             return Response(
                 {'error': f'No se puede eliminar la apuesta {pk}, el partido ya comenzó.'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -203,5 +212,32 @@ class ApuestaViewSet(ModelViewSet):
 
         return Response(
             {'mensaje': 'Apuesta eliminada correctamente.'},
-            status=status.HTTP_204_NO_CONTENT
+            status=status.HTTP_200_OK
         )
+
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=[IsAuthenticated, EsAdministrador]
+    )
+    def ganancias_casa(self, request):
+
+        total_apostado = (
+                Apuesta.objects.aggregate(
+                    total=Sum("monto_apostado")
+                )["total"] or 0
+        )
+
+        total_pagado = (
+                Apuesta.objects.aggregate(
+                    total=Sum("ganancia_cliente")
+                )["total"] or 0
+        )
+
+        ganancia_real = total_apostado - total_pagado
+
+        return Response({
+            "total_apostado": total_apostado,
+            "premios_pagados": total_pagado,
+            "ganancia_real_casa": ganancia_real
+        })

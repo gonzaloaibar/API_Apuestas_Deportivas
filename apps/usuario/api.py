@@ -7,6 +7,7 @@ from apps.usuario.models import Usuario
 from apps.usuario.serializers import UsuarioSerializer
 from rest_framework import status
 from decimal import Decimal
+from django.contrib.auth.models import Group
 
 class RegistroUsuarioAPIView(APIView):
     permission_classes = [AllowAny]
@@ -14,6 +15,13 @@ class RegistroUsuarioAPIView(APIView):
         serializer = UsuarioSerializer(data=request.data)
         if serializer.is_valid():
             usuario = serializer.save()
+
+            #obtengo el grupo Cliente
+            grupo_cliente = Group.objects.get(
+                name="Cliente"
+            )
+            #asigno al usuario al grupo Cliente
+            usuario.groups.add(grupo_cliente)
 
             return Response({"menasje":f"El usuario: { serializer.data["username"]} fue registrado exitosamente"},status=status.HTTP_201_CREATED)
         else:
