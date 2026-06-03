@@ -44,7 +44,7 @@ class PartidoViewSet(ModelViewSet):
 
         return Response({'mensaje': 'se importo correctamente los partidos'},status=status.HTTP_200_OK)
 
-    @action(methods=['post'], detail=False)
+    @action(methods=['patch'], detail=False)
     def terminar_partido(self, request):
 
         partidos = Partido.objects.filter(estado='pendiente')
