@@ -84,7 +84,7 @@ class APIFootballService:
                         'resultado_partido': definir_resultado_partido(fixture['status']['short'],item['goals']['home'],item['goals']['away'])
                     }
                 )
-                print(f'partidos_creados {partidos_creados}')
+
                 if created:
                     partidos_creados += 1
 
@@ -103,3 +103,5 @@ class APIFootballService:
         except requests.exceptions.RequestException as err:
 
             return JsonResponse({"error": "Ocurrió un error inesperado al contactar el servicio externo."}, status=500)
+
+        return partidos_creados

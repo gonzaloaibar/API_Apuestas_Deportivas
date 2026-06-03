@@ -1,4 +1,3 @@
-from contourpy import contour_generator
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status,filters
@@ -22,6 +21,7 @@ class PartidoViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated & DjangoModelPermissions]
 
     queryset = Partido.objects.all()
+    lookup_field = 'uuid'
     serializer_class = PartidoSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ['estado','fecha']
@@ -32,16 +32,29 @@ class PartidoViewSet(ModelViewSet):
         fecha_desde = request.data.get('from')
         fecha_hasta = request.data.get('to')
 
+        if not fecha_desde or not fecha_hasta:
+            return Response(
+                {'error': 'Los campos from y to son requeridos.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
-            APIFootballService.importar(fecha_desde, fecha_hasta)
-
+            partidos_creados = APIFootballService.importar(fecha_desde, fecha_hasta)
+            if partidos_creados > 0:
+                return Response({'mensaje': f'se importaron correctamente {partidos_creados} partidos'},
+                                status=status.HTTP_201_CREATED)
+            else:
+                return Response(
+                    {'mensaje': f'El rango de fechas que ingreso corresponde a partidos que ya estan cargados'},
+                    status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({'error':e})
-
-        return Response({'mensaje': 'se importo correctamente los partidos'},status=status.HTTP_200_OK)
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(methods=['post'], detail=False)
-    def terminar_partido(self, request):
+    def terminar_partidos(self, request):
 
         partidos = Partido.objects.filter(estado='pendiente')
 
@@ -141,6 +154,7 @@ class OpcionApuestaViewSet(ModelViewSet):
         filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
         ordering_fields = ['estado', 'fecha','partido']
         queryset = OpcionApuesta.objects.all()
+        lookup_field = 'uuid'
         serializer_class = OpcionApuestaSerializer
 
 def comprobar_saldo(Usuario,monto_apostado):
@@ -151,6 +165,7 @@ class ApuestaViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     queryset = Apuesta.objects.all()
+    lookup_field = 'uuid'
     serializer_class = ApuestaSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ['estado', 'fecha']
