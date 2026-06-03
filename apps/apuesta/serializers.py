@@ -12,6 +12,7 @@ class OpcionApuestaAuxiliarSerializer(serializers.ModelSerializer):
     class Meta:
         model = OpcionApuesta
         fields = [
+            "uuid",
             "prediccion",
             "multiplicador"
         ]
@@ -25,7 +26,7 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
     class Meta:
         model=OpcionApuesta
         fields = [
-            "id",
+            "uuid",
             "tipo_apuesta",
             "prediccion",
             "partido",
@@ -84,7 +85,7 @@ class PartidoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Partido
         fields = [
-            "id",
+            "uuid",
             "equipo_local",
             "equipo_visitante",
             "estado",
@@ -121,7 +122,7 @@ class ApuestaSerializer(serializers.ModelSerializer):
     class Meta:
         model=Apuesta
         fields=[
-            "id",
+            "uuid",
             "opcion_apuesta",
             "monto_apostado",
             "estado",
@@ -132,7 +133,7 @@ class ApuestaSerializer(serializers.ModelSerializer):
             "partido",
             "prediccion"
         ]
-        read_only_fields = ['id', 'ganancia_cliente', 'ganancia_casa', 'estado', 'apostado_por']
+        read_only_fields = ["uuid", 'ganancia_cliente', 'ganancia_casa', 'estado', 'apostado_por']
 
 
     def get_prediccion(self, obj):

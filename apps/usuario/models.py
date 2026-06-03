@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -5,6 +7,7 @@ from django.contrib.auth.models import AbstractUser
 # Create your models here.
 
 class Usuario(AbstractUser):
+    uuid = models.UUIDField(unique=True, editable=False, default=uuid4)
     nombre = models.CharField(max_length=50,null=False,blank=False)
     apellido = models.CharField(max_length=50,null=False,blank=False)
     cuil = models.CharField(max_length=11,verbose_name="cuil",unique=True)

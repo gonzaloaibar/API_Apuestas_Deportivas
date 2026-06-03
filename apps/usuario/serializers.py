@@ -7,7 +7,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         model = Usuario
 
         fields = [
-            "id",
+            "uuid",
             "username",
             "password",
             "nombre",

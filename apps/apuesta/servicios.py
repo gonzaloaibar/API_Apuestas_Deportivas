@@ -2,6 +2,8 @@ from django.utils.dateparse import parse_datetime
 from django.conf import settings
 from datetime import datetime
 from django.utils import timezone
+from dotenv import dotenv_values
+
 
 #Al tener la opcion de que la fehca se ingrese por el punto .env
 # se deben tener en cuanta que el usuario puede ingresar un formato diferente
@@ -44,7 +46,8 @@ def parsear_fecha(fecha):
 #pero para que funcione la api completamente se deberia tener la version premium de
 #APIFootball
 def obtener_fecha_actual():
-    fecha_simulada = getattr(settings, "FECHA_SIMULADA", None)
+    config = dotenv_values(".env")
+    fecha_simulada = config.get('FECHA_HORA_SIMULADA') #getattr(settings, "FECHA_SIMULADA", None)
     fecha_simulada = parsear_fecha(fecha_simulada)
 
     if fecha_simulada:

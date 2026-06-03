@@ -1,5 +1,6 @@
+from uuid import uuid4
 from django.db import models
-from apps.usuario.models import Usuario
+
 
 #ESTOS SON LOS POSIBLES RESULTADOS DE UN PARTIDO, POR LO TANTO SE MANEJARAN COMO CONSTANTES
 class ResultadoPartido(models.TextChoices):
@@ -13,6 +14,7 @@ class Partido(models.Model):
         ('pendiente', 'Pendiente'),
         ('finalizado', 'Finalizado'),
     )
+    uuid = models.UUIDField(unique=True,editable=False,default=uuid4)
     api_football_id = models.IntegerField(unique=True)
     equipo_local = models.CharField(max_length=100)
     equipo_visitante = models.CharField(max_length=100)
@@ -42,6 +44,7 @@ class Prediccion(models.TextChoices):
     MAS_5_GOLES = "mas_5_goles", "Más de 5 goles"
 
 class OpcionApuesta(models.Model):
+    uuid = models.UUIDField(unique=True,editable=False,default=uuid4)
     partido = models.ForeignKey(Partido, on_delete=models.CASCADE, related_name="opciones_apuesta")
     tipo_apuesta = models.CharField(max_length=100, choices=TipoApuesta.choices,blank=False,null=False)
     prediccion = models.CharField(max_length=100, choices=Prediccion.choices,blank=True,null=True)
@@ -75,9 +78,8 @@ class Apuesta(models.Model):
         ("ganada", "Ganada"),
         ("perdida", "Perdida"),
     )
-
+    uuid = models.UUIDField(unique=True,editable=False,default=uuid4)
     apostado_por=models.ForeignKey("usuario.Usuario",on_delete=models.CASCADE,  related_name='apuestas')
-    #partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
     opcion_apuesta = models.ForeignKey(OpcionApuesta, on_delete=models.CASCADE)
     monto_apostado= models.DecimalField(max_digits=10, decimal_places=2)
     estado = models.CharField(default="pendiente", max_length=100, choices=ESTADOS)

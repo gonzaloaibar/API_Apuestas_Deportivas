@@ -34,7 +34,7 @@ def definir_resultado_partido(estado_de_partido,goles_local,goles_visitante):
 def definir_estado(fecha_partido):
     fecha_simulada = obtener_fecha_actual()
 
-    if fecha_1_mayor_fecha_2(fecha_partido, fecha_simulada):
+    if fecha_1_mayor_fecha_2(fecha_simulada,fecha_partido):
         return 'finalizado'
     else:
         return 'pendiente'
@@ -95,7 +95,6 @@ class APIFootballService:
 
                 if created:
                     partidos_creados += 1
-            print(f'partidos_creados {partidos_creados}')
 
         except requests.exceptions.HTTPError as http_err:
 
@@ -112,3 +111,5 @@ class APIFootballService:
         except requests.exceptions.RequestException as err:
 
             return JsonResponse({"error": "Ocurrió un error inesperado al contactar el servicio externo."}, status=500)
+
+        return partidos_creados
