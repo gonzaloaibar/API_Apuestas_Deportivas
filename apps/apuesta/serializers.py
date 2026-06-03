@@ -1,6 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers
-from .models import Partido, Apuesta, OpcionApuesta
+from .models import Partido, Apuesta, OpcionApuesta, Prediccion, TipoApuesta
+
 
 #simplemente existe para ser usada por PartidoSerializer y mostrar esos dos atributos de la opcion de apuesta
 class OpcionApuestaAuxiliarSerializer(serializers.ModelSerializer):
@@ -48,15 +49,6 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
             f"{obj.get_prediccion_display()}"
         )
 
-    def get_partido_finalizado(self,obj):
-
-        partido=obj.partido.estado
-        print(partido)
-        if partido=="finalizado":
-            raise serializers.ValidationError(
-                "No puede crear una opcion de apuesta en un partido finalizado"
-            )
-        return obj
 
     def validate (self, attrs):
 
@@ -64,11 +56,47 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
         tipo_apuesta=attrs["tipo_apuesta"]
         prediccion=attrs["prediccion"]
 
+        #no se puede crear una opcion de apuesta para un partido finalizado
+        if partido.estado=="finalizado":
+            raise serializers.ValidationError(
+                "No puede crear una opción de apuesta en un partido finalizado."
+            )
+
+        #el tipo de apuesta y la prediccion deben coincidir
+        predicciones_resultado = {
+            Prediccion.GANA_LOCAL,
+            Prediccion.EMPATE,
+            Prediccion.GANA_VISITANTE,
+        }
+
+        predicciones_goles = {
+            Prediccion.MAS_1_GOL,
+            Prediccion.MAS_3_GOLES,
+            Prediccion.MAS_5_GOLES,
+        }
+
+        if (
+                tipo_apuesta == TipoApuesta.RESULTADO
+                and prediccion not in predicciones_resultado
+        ):
+            raise serializers.ValidationError(
+                "La predicción no corresponde a una apuesta de resultado."
+            )
+
+        if (
+                tipo_apuesta == TipoApuesta.GOLES
+                and prediccion not in predicciones_goles
+        ):
+            raise serializers.ValidationError(
+                "La predicción no corresponde a una apuesta de cantidad de goles."
+            )
+
         queryset=OpcionApuesta.objects.filter(partido=partido, tipo_apuesta=tipo_apuesta, prediccion=prediccion)
 
         #ya existe la instancia y solo la quiero modificar
         if self.instance:
             queryset = queryset.exclude(pk=self.instance.pk)
+
 
         #quiero crear una opcion que ya existe en la db
         if queryset.exists():
@@ -170,18 +198,6 @@ class ApuestaSerializer(serializers.ModelSerializer):
 
         return opcion
 
-    # def validate_apuesta_repetida(self,apuesta):
-    #     print(apuesta)
-    #     usuario = Apuesta.objects.get(apostado_por=apuesta.apostador_por.id)
-    #     print(usuario)
-    #     apuestas_creadas=Apuesta.filter(apostado_por=usuario)
-    #
-    #     for a in apuestas_creadas:
-    #         if a.partido==apuesta.partido and a.opcion_apuesta==apuesta.opcion_apuesta:
-    #             raise serializers.ValidationError(
-    #                 "ksxkalsjdlkasjlkjd"
-    #             )
-
 
     #validacion para que el monto apostado sea mayor al monto minimo
     def validate(self, attrs):
@@ -193,6 +209,14 @@ class ApuestaSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"El monto mínimo es {opcion.monto_minimo}"
             )
+
+        # context->cabezera con la informacion del usuario
+        usuario = self.context['request'].user
+
+        existe = Apuesta.objects.filter(apostado_por=usuario, opcio_apuesta__partido=opcion.partido,
+                                        opcio_apuesta__prediccion=opcion.prediccion).exists()
+        if existe:
+            raise serializers.ValidationError("Ya realizo una apuesta con esa prediccion para este partido")
 
         return attrs
 
