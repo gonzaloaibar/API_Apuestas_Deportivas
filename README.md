@@ -87,7 +87,7 @@ CODIGO_DE_RETIRO = 'CODIGORETIRO12456'
 - ganancia_casa: porcentaje que se lleva la casa de apuestas
 - fecha: fecha en la que se realizo la apuesta
 
-![Modelos](img readme/Modelos-Api-Apuestas.png)
+![Modelos](img_readme/Modelos-Api-Apuestas.png)
 
 ## EndPoints:
 
@@ -119,9 +119,9 @@ CODIGO_DE_RETIRO = 'CODIGORETIRO12456'
 En el admin de Django se debera crear dos grupos uno Cliente y el otro Administrador.
 Donde el Administrador tendra todos los permisos mientras que el Cliente se le deben agregar todos los permisos
 para Apuestas (CRUD) y hacer _GET_ en los endpoints ``api/partidos/ver_partidos`` y  ``api/opcion_de_apuetas/``
-![img.png](img readme/img.png)
-![img_1.png](img readme/img_1.png)
-![img_2.png](img readme/img_2.png)
+![img.png](img_readme/img.png)
+![img_1.png](img_readme/img_1.png)
+![img_2.png](img_readme/img_2.png)
 
 ## Autores 
 Aibar Ariel Gonzalo - @gonzaloaibar
