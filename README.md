@@ -115,3 +115,7 @@ para Apuestas (CRUD) y hacer _GET_ en los endpoints ``api/partidos/ver_partidos`
 ![img.png](img readme/img.png)
 ![img_1.png](img readme/img_1.png)
 ![img_2.png](img readme/img_2.png)
+
+## Autores 
+Aibar Ariel Gonzalo - @gonzaloaibar
+Luna Pedro Exequiel - @exeluna16
