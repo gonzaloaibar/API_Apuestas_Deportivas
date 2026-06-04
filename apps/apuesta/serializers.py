@@ -24,6 +24,15 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
     descripcion = serializers.SerializerMethodField()
     partido_id = serializers.SerializerMethodField()
 
+    partido = serializers.PrimaryKeyRelatedField(
+        queryset=Partido.objects.all(),
+        write_only=True
+    )
+    partido = serializers.SlugRelatedField(
+        queryset=Partido.objects.all(),
+        slug_field="uuid"
+    )
+
     class Meta:
         model=OpcionApuesta
         fields = [
@@ -125,7 +134,7 @@ class PartidoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Partido
         fields = [
-            "id",
+            "uuid",
             "equipo_local",
             "equipo_visitante",
             "estado",
@@ -154,7 +163,10 @@ class ApuestaSerializer(serializers.ModelSerializer):
         queryset=OpcionApuesta.objects.all(),
         write_only=True
     )
-
+    opcion_apuesta = serializers.SlugRelatedField(
+        queryset=OpcionApuesta.objects.all(),
+        slug_field="uuid"
+    )
     prediccion=serializers.SerializerMethodField()
 
     partido=serializers.SerializerMethodField()
@@ -167,12 +179,12 @@ class ApuestaSerializer(serializers.ModelSerializer):
             "monto_apostado",
             "estado",
             "ganancia_cliente",
-            "ganancia_casa",
             "fecha",
             "apostado_por",
             "partido",
             "prediccion"
         ]
+        #fields = "__all__"
         read_only_fields = ["uuid", 'ganancia_cliente', 'ganancia_casa', 'estado', 'apostado_por']
 
 
@@ -213,8 +225,8 @@ class ApuestaSerializer(serializers.ModelSerializer):
         # context->cabezera con la informacion del usuario
         usuario = self.context['request'].user
 
-        existe = Apuesta.objects.filter(apostado_por=usuario, opcio_apuesta__partido=opcion.partido,
-                                        opcio_apuesta__prediccion=opcion.prediccion).exists()
+        existe = Apuesta.objects.filter(apostado_por=usuario, opcion_apuesta__partido=opcion.partido,
+                                        opcion_apuesta__prediccion=opcion.prediccion).exists()
         if existe:
             raise serializers.ValidationError("Ya realizo una apuesta con esa prediccion para este partido")
 
