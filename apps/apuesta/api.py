@@ -30,6 +30,10 @@ class PartidoViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ['estado','fecha']
 
+    filterset_fields = {
+        "fecha": ["gte", "lte"]
+    }
+
     @action(methods=['post'], detail=False)
     def importar_partidos(self, request):
 
@@ -157,6 +161,9 @@ class OpcionApuestaViewSet(ModelViewSet):
         permission_classes = [IsAuthenticated & DjangoModelPermissions]
         filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
         ordering_fields = ['estado', 'fecha','partido']
+        filterset_fields = {
+            "multiplicador": ["gte", "lte"]
+        }
         queryset = OpcionApuesta.objects.all()
         lookup_field = 'uuid'
         serializer_class = OpcionApuestaSerializer
@@ -178,6 +185,7 @@ class ApuestaViewSet(ModelViewSet):
     serializer_class = ApuestaSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ['estado', 'fecha']
+    filterset_fields = ["estado"]
 
     def perform_create(self, serializer):
 
