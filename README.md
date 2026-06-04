@@ -120,6 +120,7 @@ En el admin de Django se debera crear dos grupos uno Cliente y el otro Administr
 Donde el Administrador tendra todos los permisos mientras que el Cliente se le deben agregar todos los permisos
 para Apuestas (CRUD) y hacer _GET_ en los endpoints ``api/partidos/ver_partidos`` y  ``api/opcion_de_apuetas/``
 
+
 ![img.png](https://raw.githubusercontent.com/gonzaloaibar/API_Apuestas_Deportivas/main/img_readme/img.png)
 ![img_1.png](https://raw.githubusercontent.com/gonzaloaibar/API_Apuestas_Deportivas/main/img_readme/img_1.png)
 ![img_2.png](https://raw.githubusercontent.com/gonzaloaibar/API_Apuestas_Deportivas/main/img_readme/img_2.png)
