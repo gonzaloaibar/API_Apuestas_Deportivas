@@ -31,6 +31,13 @@ API_FOOTBALL_KEY = "ApiKey proporcionada por API-FOOTBALL"
 
 #Formato de la fecha y hora: año-mes-diaThora:min:sec Ejemplo:2023-05-30T20:00:00
 FECHA_HORA_SIMULADA = 2023-04-01T21:30:00
+
+#----------------ATENCION LOS SIGUIENTES DATOS DE LOS CAMPOS QUEDAN BAJO SU PROPIO RIESGO, SE RECOMIENDA USAR UNA FUNCION HASH EXTERNA----------------------------------------------------------
+#Ingresar un codigo unico para las recargas
+CODIGO_DE_RECARGA = 'CODIGORECARGA12456'
+
+#Ingresar un codigo unico para los retiros
+CODIGO_DE_RETIRO = 'CODIGORETIRO12456'
 ```
 
 ## Instalación:
@@ -90,7 +97,7 @@ FECHA_HORA_SIMULADA = 2023-04-01T21:30:00
 ### Usuarios
 - `POST /usuario/crear_usuario/` — Registrar un nuevo usuario.
 - `GET /usuario/ver_usuarios/` — Listado de usuarios.
-- `POST /usuario/{id}/cargar_saldo/` — Cargar saldo a un usuario.
+- `POST /usuario/{id}/modificar_saldo/` — Modificar el saldo de un usuario. ATENCION❗❗❗ LOS CODIGOS SE DEBEN DEFINIR DEL ARCHIVO ``.env``
 
 ### Partidos
 - `GET /api/partidos/` — Listado de todos los partidos.
