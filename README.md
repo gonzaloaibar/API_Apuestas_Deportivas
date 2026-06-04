@@ -69,13 +69,13 @@ CODIGO_DE_RETIRO = 'CODIGORETIRO12456'
 - equipo_visitante: equipo visitante
 - goles_local: cantidad de goles del local
 - goles_visitante: cantidad de goles del visitante
-- resultado_partido: ("L", "Gana Local")("E", "Empate") ("V", "Gana Visitante") ("C", "El partido se canceló por algún motivo externo")  
+- resultado_partido: ["L", "Gana Local"] ["E", "Empate"] ["V", "Gana Visitante"] ["C", "El partido se canceló por algún motivo externo"]  
 - estado: pendiente/finalizado (pendiente por defecto)
 - fecha = fecha en que se disputa el partido
 ## Opcion de Apuesta(``OpcionApuesta``)
 - partido: partido al que pertenece la opcion disponible para apostar
 - tipo_apuesta: valor de las posibles apuestas (Goles/Resultado)
-- prediccion: Predicción del usuario ("L", "Gana Local") (["E", "Empate"] )("V", "Gana Visitante") ("mas_1_gol", "Más de 1 gol") ("mas_3_goles", "Más de 3 goles") ("mas_5_goles", "Más de 5 goles")
+- prediccion: Predicción del usuario ["L", "Gana Local"] ["E", "Empate"] ["V", "Gana Visitante"] ["mas_1_gol", "Más de 1 gol"] ["mas_3_goles", "Más de 3 goles"] ["mas_5_goles", "Más de 5 goles"]
 - multiplicador: cuota por la cual se va multiplicar la apuesta del cliente
 - monto_minimo:  cantidad minima de dinero admitible para una apuesta
 ## Apuesta(``Apuesta``)
@@ -119,11 +119,9 @@ CODIGO_DE_RETIRO = 'CODIGORETIRO12456'
 En el admin de Django se debera crear dos grupos uno Cliente y el otro Administrador.
 Donde el Administrador tendra todos los permisos mientras que el Cliente se le deben agregar todos los permisos
 para Apuestas (CRUD) y hacer _GET_ en los endpoints ``api/partidos/ver_partidos`` y  ``api/opcion_de_apuetas/``
-
-
-![img.png](https://raw.githubusercontent.com/gonzaloaibar/API_Apuestas_Deportivas/main/img_readme/img.png)
-![img_1.png](https://raw.githubusercontent.com/gonzaloaibar/API_Apuestas_Deportivas/main/img_readme/img_1.png)
-![img_2.png](https://raw.githubusercontent.com/gonzaloaibar/API_Apuestas_Deportivas/main/img_readme/img_2.png)
+![img.png](img_readme/img.png)
+![img_1.png](img_readme/img_1.png)
+![img_2.png](img_readme/img_2.png)
 
 ## Autores 
 Aibar Ariel Gonzalo - @gonzaloaibar
