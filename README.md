@@ -14,7 +14,7 @@ una vez finalizado el evento deportivo. Apoyandonos del servicio _API-FOOTBALL_ 
 - Resolver automáticamente las apuestas una vez finalizado un partido.
 - Gestionar saldos de usuarios.
 - Proveer mecanismos de autorización mediante roles y permisos.
-- Consultar ganancias de la casa de apuestas
+- Consultar ganancias de la casa de apuestas (dejando en claro que la casa de apuestas siempre se lleva una comisión establecida en el archivo .env)
 
 ##  Tecnologías:
 - Python 3.12+

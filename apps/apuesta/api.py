@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from decouple import config
 from django.db import transaction
 from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
@@ -91,10 +94,18 @@ def resolver_apuesta_resultado(apuesta,opcion_apuesta):
 #si el usuario acerto debo traerlo y agregar a su saldo el premio de la apuesta
 #caso contrario toodo va para la casa de apuestas
 def resolver_apuesta_ganada(apuesta, opcion_apuesta):
-    cliente = apuesta.apostado_por
+    PORCENTAJE_DE_COMISION = Decimal(str(dotenv_values(".env").get("PORCENTAJE_DE_COMISION")))
 
-    premio = apuesta.monto_apostado * opcion_apuesta.multiplicador
-    apuesta.ganancia_cliente = premio
+    cliente = apuesta.apostado_por
+    #Calculo para definir la ganancia de la casa, la cual se llevara un porcentaje expecificado en el archivo .env
+    premio_parcial = apuesta.monto_apostado * opcion_apuesta.multiplicador
+    ganancia = premio_parcial - apuesta.monto_apostado
+    comision = ganancia * PORCENTAJE_DE_COMISION
+
+    premio_final = premio_parcial - comision
+
+    apuesta.ganancia_cliente = premio_final
+    apuesta.ganancia_casa = comision
 
     cliente.saldo += apuesta.ganancia_cliente
 
