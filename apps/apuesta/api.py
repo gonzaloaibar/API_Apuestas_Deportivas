@@ -11,6 +11,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_204_NO
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
+from .filters import PartidoFilter
 from .models import Partido, Apuesta, OpcionApuesta, TipoApuesta, Prediccion
 from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer
 from .servicios import fecha_1_mayor_fecha_2, obtener_fecha_actual
@@ -31,6 +32,7 @@ class PartidoViewSet(ModelViewSet):
     lookup_field = 'uuid'
     serializer_class = PartidoSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = PartidoFilter
     ordering_fields = ['estado','fecha']
 
     @action(methods=['post'], detail=False)
