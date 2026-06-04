@@ -28,7 +28,7 @@ class PartidoViewSet(ModelViewSet):
 
     permission_classes = [IsAuthenticated & DjangoModelPermissions]
 
-    queryset = Partido.objects.all()
+    queryset = Partido.objects.all().order_by('fecha')
     lookup_field = 'uuid'
     serializer_class = PartidoSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
