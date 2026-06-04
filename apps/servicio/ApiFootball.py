@@ -69,7 +69,7 @@ class APIFootballService:
             data = response.json()
 
             if data.get("results") == 0:
-                raise Exception("No hay resultados")
+                raise Exception("No existen partidos en el rango de fecha proporcionado")
 
             if data.get("errors"):
                 raise Exception(
