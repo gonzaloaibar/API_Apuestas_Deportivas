@@ -159,10 +159,10 @@ class PartidoSerializer(serializers.ModelSerializer):
 
 class ApuestaSerializer(serializers.ModelSerializer):
 
-    opcion_apuesta = serializers.PrimaryKeyRelatedField(
-        queryset=OpcionApuesta.objects.all(),
-        write_only=True
-    )
+    # opcion_apuesta = serializers.PrimaryKeyRelatedField(
+    #     queryset=OpcionApuesta.objects.all(),
+    #     write_only=True
+    # )
     opcion_apuesta = serializers.SlugRelatedField(
         queryset=OpcionApuesta.objects.all(),
         slug_field="uuid"
@@ -211,12 +211,22 @@ class ApuestaSerializer(serializers.ModelSerializer):
         return opcion
 
 
-    #validacion para que el monto apostado sea mayor al monto minimo
+    #validacion para el monto apostado, y para que no se repita la misma opcion de apuesta dos veces en el mismo partido y por el mismo usuario
     def validate(self, attrs):
 
-        opcion = attrs["opcion_apuesta"]
-        monto = attrs["monto_apostado"]
+        opcion = attrs.get("opcion_apuesta")
+        monto = attrs.get("monto_apostado")
 
+        #pregunto si en la request existe opcion y monto, si no existen significa que estoy haciendo un patch
+        if self.instance:
+
+            if opcion is None:
+               opcion = self.instance.opcion_apuesta #traigo la opcion de la instancia que estoy modificando
+
+            if monto is None:
+               monto = self.instance.monto_apostado #traigo el monto de la instancia que estoy modificando
+
+        #pregunto si el monto apostado es mayor al minimo
         if monto < opcion.monto_minimo:
             raise serializers.ValidationError(
                 f"El monto mínimo es {opcion.monto_minimo}"
@@ -225,9 +235,15 @@ class ApuestaSerializer(serializers.ModelSerializer):
         # context->cabezera con la informacion del usuario
         usuario = self.context['request'].user
 
-        existe = Apuesta.objects.filter(apostado_por=usuario, opcion_apuesta__partido=opcion.partido,
-                                        opcion_apuesta__prediccion=opcion.prediccion).exists()
-        if existe:
+        #consulto si existe ya una apuesta de este usuario para este partido con esta misma predicción
+        queryset = Apuesta.objects.filter(apostado_por=usuario, opcion_apuesta__partido=opcion.partido,
+                                        opcion_apuesta__prediccion=opcion.prediccion)
+
+        # Si estoy editando una apuesta, excluyo la actual, esto para que nme permita el patch
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.exists():
             raise serializers.ValidationError("Ya realizo una apuesta con esa prediccion para este partido")
 
         return attrs
