@@ -24,10 +24,10 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
     descripcion = serializers.SerializerMethodField()
     partido_id = serializers.SerializerMethodField()
 
-    partido = serializers.PrimaryKeyRelatedField(
-        queryset=Partido.objects.all(),
-        write_only=True
-    )
+    # partido = serializers.PrimaryKeyRelatedField(
+    #     queryset=Partido.objects.all(),
+    #     write_only=True
+    # )
     partido = serializers.SlugRelatedField(
         queryset=Partido.objects.all(),
         slug_field="uuid"
