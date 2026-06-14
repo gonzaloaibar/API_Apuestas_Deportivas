@@ -24,10 +24,6 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
     descripcion = serializers.SerializerMethodField()
     partido_id = serializers.SerializerMethodField()
 
-    # partido = serializers.PrimaryKeyRelatedField(
-    #     queryset=Partido.objects.all(),
-    #     write_only=True
-    # )
     partido = serializers.SlugRelatedField(
         queryset=Partido.objects.all(),
         slug_field="uuid"
@@ -58,15 +54,20 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
             f"{obj.get_prediccion_display()}"
         )
 
-
     def validate (self, attrs):
 
-        partido=attrs["partido"]
-        tipo_apuesta=attrs["tipo_apuesta"]
-        prediccion=attrs["prediccion"]
+        partido=attrs.get("partido")
+        tipo_apuesta=attrs.get("tipo_apuesta")
+        prediccion=attrs.get("prediccion")
 
-        #no se puede crear una opcion de apuesta para un partido finalizado
-        if partido.estado=="finalizado":
+        # Si estamos en PATCH y no vino el campo, tomamos el valor actual
+        if self.instance:
+            partido = partido or self.instance.partido
+            tipo_apuesta = tipo_apuesta or self.instance.tipo_apuesta
+            prediccion = prediccion or self.instance.prediccion
+
+        # controlo que el partido no esté finalizado
+        if partido and partido.estado == "finalizado":
             raise serializers.ValidationError(
                 "No puede crear una opción de apuesta en un partido finalizado."
             )
@@ -89,7 +90,7 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
                 and prediccion not in predicciones_resultado
         ):
             raise serializers.ValidationError(
-                "La predicción no corresponde a una apuesta de resultado."
+                {"prediccion":"La predicción no corresponde a una apuesta de resultado."}
             )
 
         if (
@@ -97,7 +98,7 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
                 and prediccion not in predicciones_goles
         ):
             raise serializers.ValidationError(
-                "La predicción no corresponde a una apuesta de cantidad de goles."
+                {"prediccion":"La predicción no corresponde a una apuesta de cantidad de goles."}
             )
 
         queryset=OpcionApuesta.objects.filter(partido=partido, tipo_apuesta=tipo_apuesta, prediccion=prediccion)
@@ -114,6 +115,15 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
             )
         return attrs
 
+    def update(self, instance, validated_data):
+
+        instance.multiplicador = validated_data.get("multiplicador",instance.multiplicador)
+        instance.monto_minimo = validated_data.get("monto_minimo",instance.monto_minimo)
+
+        instance.prediccion = validated_data.get("monto_minimo", instance.prediccion)
+
+        instance.save()
+        return instance
 
 
 
