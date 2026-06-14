@@ -119,8 +119,8 @@ class OpcionApuestaSerializer(serializers.ModelSerializer):
 
         instance.multiplicador = validated_data.get("multiplicador",instance.multiplicador)
         instance.monto_minimo = validated_data.get("monto_minimo",instance.monto_minimo)
-
-        instance.prediccion = validated_data.get("monto_minimo", instance.prediccion)
+        instance.tipo_apuesta = validated_data.get("tipo_apuesta", instance.tipo_apuesta)
+        instance.prediccion = validated_data.get("prediccion", instance.prediccion)
 
         instance.save()
         return instance
