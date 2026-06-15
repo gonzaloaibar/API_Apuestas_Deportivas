@@ -13,7 +13,7 @@ from rest_framework.decorators import action
 
 from .filters import PartidoFilter
 from .models import Partido, Apuesta, OpcionApuesta, TipoApuesta, Prediccion
-from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer
+from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer, ModificarApuestaSerializer
 from .servicios import fecha_1_mayor_fecha_2, obtener_fecha_actual
 
 from apps.servicio.ApiFootball import APIFootballService
@@ -22,7 +22,7 @@ from ..usuario.excepciones import SaldoInsuficienteException
 from dotenv import dotenv_values
 
 from ..usuario.permissions import EsPropietarioApuesta, EsAdministrador
-
+from django.db import transaction
 
 class PartidoViewSet(ModelViewSet):
 
@@ -211,6 +211,85 @@ class ApuestaViewSet(ModelViewSet):
         usuario.save()
 
         serializer.save(apostado_por=usuario)
+
+    @action(methods=["patch"], detail=True)
+    def modificar_apuesta(self, request, uuid=None):
+
+        apuesta=self.get_object() #obtengo la apuesta
+        serializer = ModificarApuestaSerializer(instance=apuesta, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        nuevo_monto = request.data.get("monto_apostado")#obtengo el nuevo monto de la request, si viene
+        nueva_opcion_uuid = request.data.get("opcion_apuesta")#obtengo la nueva opcion de la request, si viene
+        usuario = request.user#obtengo el usuario que realizo la request
+
+        #valido que se envien el o los campos para la modificacion
+        if not request.data:
+            return Response(
+                {
+                    "error":
+                        "Debe indicar al menos un campo a modificar."
+                },
+                status=400
+            )
+
+        #pregunto si nuevo monto vino en la request o es None
+        nuevo_monto = (
+            Decimal(str(nuevo_monto))
+            if nuevo_monto is not None
+            else apuesta.monto_apostado
+        )
+
+        #si nueva_opcion no es None hago la modificacion
+        if nueva_opcion_uuid:
+
+            #ahora la nueva opcion reemplaza la anterior
+            nueva_opcion = OpcionApuesta.objects.get(
+                uuid=nueva_opcion_uuid
+            )
+
+        else:
+            #caso contrario no se esta modificando la opcion, conserva la actual
+            nueva_opcion = apuesta.opcion_apuesta
+
+        #realizar la modificacion en el monto
+        monto_actual = apuesta.monto_apostado
+
+        diferencia = nuevo_monto - monto_actual
+
+        if diferencia > 0:
+            if usuario.saldo < diferencia:
+                return Response(
+                    {
+                        "error": (
+                            "Saldo insuficiente para "
+                            "aumentar la apuesta."
+                        )
+                    },
+                    status=400
+                )
+            usuario.saldo -= diferencia
+
+        elif diferencia < 0:
+            usuario.saldo += abs(diferencia)
+
+
+
+        apuesta.monto_apostado = nuevo_monto
+        apuesta.opcion_apuesta = nueva_opcion
+
+        with transaction.atomic():
+            usuario.save()
+            apuesta.save()
+
+        return Response(
+            {
+                "mensaje": "Apuesta modificada."
+                # "monto_apostado": apuesta.monto_apostado,
+                # "opcion_apuesta": apuesta.opcion_apuesta,
+                # "saldo_actual": usuario.saldo
+            }
+        )
+
 
 
     @action(methods={"delete"},detail=True,

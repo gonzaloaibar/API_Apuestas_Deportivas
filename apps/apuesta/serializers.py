@@ -1,6 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers
 from .models import Partido, Apuesta, OpcionApuesta, Prediccion, TipoApuesta
+from .. import apuesta
 
 
 #simplemente existe para ser usada por PartidoSerializer y mostrar esos dos atributos de la opcion de apuesta
@@ -156,13 +157,89 @@ class PartidoSerializer(serializers.ModelSerializer):
 
         return data
 
+class ApuestaValidator:
+
+    @staticmethod
+    def validar_apuesta_pendiente(apuesta):
+
+        if apuesta.estado != "pendiente":
+            raise serializers.ValidationError(
+                "Solo se pueden modificar apuestas pendientes."
+            )
+
+    @staticmethod
+    def validate_opcion_apuesta(opcion):
+        if opcion.partido.estado != "pendiente":
+            raise serializers.ValidationError(
+                "No se puede apostar sobre un partido finalizado."
+            )
+
+    @staticmethod
+    def validar_monto_minimo(opcion,monto):
+        if monto < opcion.monto_minimo:
+            raise serializers.ValidationError(
+                f"El monto mínimo es {opcion.monto_minimo}"
+            )
+
+    @staticmethod
+    def validar_prediccion_duplicada(usuario,opcion,apuesta_actual=None):
+
+        queryset = Apuesta.objects.filter(
+            apostado_por=usuario,
+            opcion_apuesta__partido=opcion.partido,
+            opcion_apuesta__prediccion=opcion.prediccion
+        )
+
+        # Si estoy modificando una apuesta,
+        # excluyo la apuesta actual.
+        if apuesta_actual:
+            queryset = queryset.exclude(
+                pk=apuesta_actual.pk
+            )
+
+        if queryset.exists():
+            raise serializers.ValidationError(
+                "Ya realizó una apuesta con esa predicción para este partido."
+            )
+
+#serializador extra para la modificacion de apuesta
+class ModificarApuestaSerializer(serializers.Serializer):
+
+    opcion_apuesta = serializers.SlugRelatedField(
+        queryset=OpcionApuesta.objects.all(),
+        slug_field="uuid",
+        required=False
+    )
+
+    monto_apostado = serializers.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        required=False
+    )
+
+    #validaciones
+    def validate(self, attrs):
+        apuesta = self.instance
+
+        opcion = attrs.get("opcion_apuesta",apuesta.opcion_apuesta)
+
+        monto = attrs.get("monto_apostado",apuesta.monto_apostado)
+
+        usuario = self.context["request"].user
+
+        ApuestaValidator.validar_apuesta_pendiente(apuesta)
+
+        ApuestaValidator.validate_opcion_apuesta(opcion)
+
+        ApuestaValidator.validar_monto_minimo(opcion,monto)
+
+        ApuestaValidator.validar_prediccion_duplicada(usuario,opcion,apuesta_actual=apuesta)
+
+        return attrs
+
 
 class ApuestaSerializer(serializers.ModelSerializer):
 
-    # opcion_apuesta = serializers.PrimaryKeyRelatedField(
-    #     queryset=OpcionApuesta.objects.all(),
-    #     write_only=True
-    # )
     opcion_apuesta = serializers.SlugRelatedField(
         queryset=OpcionApuesta.objects.all(),
         slug_field="uuid"
@@ -201,50 +278,18 @@ class ApuestaSerializer(serializers.ModelSerializer):
             f"ID = {obj.opcion_apuesta.partido.id}"
         )
 
-    #validacion para que solo se pueda apostar sobre un partido pendiente
-    def validate_opcion_apuesta(self, opcion):
-        if opcion.partido.estado != "pendiente":
-            raise serializers.ValidationError(
-                "No se puede apostar sobre un partido finalizado."
-            )
+    #validaciones
 
-        return opcion
-
-
-    #validacion para el monto apostado, y para que no se repita la misma opcion de apuesta dos veces en el mismo partido y por el mismo usuario
     def validate(self, attrs):
+        opcion = attrs["opcion_apuesta"]
+        monto = attrs["monto_apostado"]
 
-        opcion = attrs.get("opcion_apuesta")
-        monto = attrs.get("monto_apostado")
+        usuario = self.context["request"].user
 
-        #pregunto si en la request existe opcion y monto, si no existen significa que estoy haciendo un patch
-        if self.instance:
+        ApuestaValidator.validate_opcion_apuesta(opcion)
 
-            if opcion is None:
-               opcion = self.instance.opcion_apuesta #traigo la opcion de la instancia que estoy modificando
+        ApuestaValidator.validar_monto_minimo(opcion,monto)
 
-            if monto is None:
-               monto = self.instance.monto_apostado #traigo el monto de la instancia que estoy modificando
-
-        #pregunto si el monto apostado es mayor al minimo
-        if monto < opcion.monto_minimo:
-            raise serializers.ValidationError(
-                f"El monto mínimo es {opcion.monto_minimo}"
-            )
-
-        # context->cabezera con la informacion del usuario
-        usuario = self.context['request'].user
-
-        #consulto si existe ya una apuesta de este usuario para este partido con esta misma predicción
-        queryset = Apuesta.objects.filter(apostado_por=usuario, opcion_apuesta__partido=opcion.partido,
-                                        opcion_apuesta__prediccion=opcion.prediccion)
-
-        # Si estoy editando una apuesta, excluyo la actual, esto para que nme permita el patch
-        if self.instance:
-            queryset = queryset.exclude(pk=self.instance.pk)
-
-        if queryset.exists():
-            raise serializers.ValidationError("Ya realizo una apuesta con esa prediccion para este partido")
+        ApuestaValidator.validar_prediccion_duplicada(usuario,opcion)
 
         return attrs
-
