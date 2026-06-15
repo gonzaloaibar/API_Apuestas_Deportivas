@@ -41,9 +41,11 @@ def definir_estado(fecha_partido):
 
 class APIFootballService:
     @staticmethod
-    def importar(from_date, to_date):
-
+    def importar(fecha_inicio, fecha_fin):
         try:
+            if fecha_1_mayor_fecha_2(fecha_inicio, fecha_fin):
+                raise Exception (f'La fecha {fecha_inicio} es posterior a la fecha {fecha_fin}, por favor revise')
+
             url = 'https://v3.football.api-sports.io/fixtures'
 
             headers = {
@@ -53,8 +55,8 @@ class APIFootballService:
             params = {
                 'league': 128,  # por el momento solo liga argentina
                 'season': 2023,
-                'from': from_date,
-                'to': to_date
+                'from': fecha_inicio,
+                'to': fecha_fin
             }
 
             response = requests.get(
