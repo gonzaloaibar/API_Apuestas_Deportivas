@@ -72,17 +72,19 @@ def test_opcion_apuesta_usuario_no_autenticado(get_partido,api_client):
 
     assert respuesta.status_code == status.HTTP_401_UNAUTHORIZED
 
-'''
-@pytest.mark.django_db
-def test_opccion_apuesta(crear_partidos,crear_opcion_apuesta):
 
-    partido = crear_partidos(api_football_id='1234',equipo_local='Boca',equipo_visitante='RiBer',estado='pendiente',fecha='2023-03-01')
-
-    opcion_apuesta = crear_opcion_apuesta
-
-    assert opcion_apuesta.partido.equipo_local == 'River'
-    assert partido.equipo_local == 'Boca'
-    assert True
-'''
+# @pytest.mark.django_db
+# def test_opccion_apuesta(crear_partidos,crear_opcion_apuesta):
+#
+#     partido = crear_partidos(api_football_id='1234',equipo_local='Boca',equipo_visitante='RiBer',estado='pendiente',fecha='2023-03-01')
+#     partido2 = crear_partidos(api_football_id='1235', equipo_local='Boca', equipo_visitante='Huracan', estado='finalizado',fecha='2023-03-01')
+#     #opcion_apuesta = crear_opcion_apuesta
+#
+#     #assert opcion_apuesta.partido.equipo_local == 'River'
+#     print(partido)
+#     print(partido2)
+#     assert partido2.equipo_visitante == 'Huracan'
+#     assert True
+#
 
 

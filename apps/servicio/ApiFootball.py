@@ -2,6 +2,7 @@ import requests
 from django.conf import settings
 from django.http import JsonResponse
 
+from apps.apuesta.excepciones import NoExistenPartidosError
 from apps.apuesta.models import Partido
 from apps.apuesta.servicios import fecha_1_mayor_fecha_2, obtener_fecha_actual
 
@@ -42,79 +43,54 @@ def definir_estado(fecha_partido):
 class APIFootballService:
     @staticmethod
     def importar(fecha_inicio, fecha_fin):
-        try:
-            if fecha_1_mayor_fecha_2(fecha_inicio, fecha_fin):
-                raise Exception (f'La fecha {fecha_inicio} es posterior a la fecha {fecha_fin}, por favor revise')
+        if fecha_1_mayor_fecha_2(fecha_inicio, fecha_fin):
+            raise ValueError (f'La fecha {fecha_inicio} es posterior a la fecha {fecha_fin}, por favor revise')
+        url = 'https://v3.football.api-sports.io/fixtures'
+        headers = {
+            'x-apisports-key': settings.API_FOOTBALL_KEY
+        }
+        params = {
+            'league': 128,  # por el momento solo liga argentina
+            'season': 2023,
+            'from': fecha_inicio,
+            'to': fecha_fin
+        }
+        response = requests.get(
+            url,
+            headers=headers,
+            params=params
+        )
+        response.raise_for_status()
+        data = response.json()
+        if data.get("results") == 0:
+            raise NoExistenPartidosError #ValueError("No existen partidos en el rango de fecha proporcionado")
 
-            url = 'https://v3.football.api-sports.io/fixtures'
-
-            headers = {
-                'x-apisports-key': settings.API_FOOTBALL_KEY
-            }
-
-            params = {
-                'league': 128,  # por el momento solo liga argentina
-                'season': 2023,
-                'from': fecha_inicio,
-                'to': fecha_fin
-            }
-
-            response = requests.get(
-                url,
-                headers=headers,
-                params=params
+        if data.get("errors"):
+            raise ValueError(
+                f"API Football: {data['errors']}"
             )
 
+        partidos_creados = 0
 
-            response.raise_for_status()
+        for item in data['response']:
+            fixture = item['fixture']
+            teams = item['teams']
+            goals = item['goals']
 
-            data = response.json()
+            _, created = Partido.objects.get_or_create(
+                api_football_id=fixture['id'],
+                defaults={
+                    'equipo_local': teams['home']['name'],
+                    'equipo_visitante': teams['away']['name'],
+                    'fecha': fixture['date'],
+                    'goles_local': goals['home'],
+                    'goles_visitante': goals['away'],
+                    'estado': definir_estado(fixture['date']),
+                    'resultado_partido': definir_resultado_partido(fixture['status']['short'],item['goals']['home'],item['goals']['away'])
+                }
+            )
 
-            if data.get("results") == 0:
-                raise Exception("No existen partidos en el rango de fecha proporcionado")
-
-            if data.get("errors"):
-                raise Exception(
-                    f"API Football: {data['errors']}"
-                )
-
-            partidos_creados = 0
-
-            for item in data['response']:
-                fixture = item['fixture']
-                teams = item['teams']
-                goals = item['goals']
-
-                _, created = Partido.objects.get_or_create(
-                    api_football_id=fixture['id'],
-                    defaults={
-                        'equipo_local': teams['home']['name'],
-                        'equipo_visitante': teams['away']['name'],
-                        'fecha': fixture['date'],
-                        'goles_local': goals['home'],
-                        'goles_visitante': goals['away'],
-                        'estado': definir_estado(fixture['date']),
-                        'resultado_partido': definir_resultado_partido(fixture['status']['short'],item['goals']['home'],item['goals']['away'])
-                    }
-                )
-
-                if created:
-                    partidos_creados += 1
-
-        except requests.exceptions.HTTPError as http_err:
-
-            return JsonResponse({"error": "Hubo un problema al consultar el servicio externo."}, status=502)
-
-        except requests.exceptions.ConnectionError as conn_err:
-
-            return JsonResponse({"error": "No se pudo conectar al servicio externo. Inténtelo más tarde."}, status=503)
-
-        except requests.exceptions.Timeout as timeout_err:
-
-            return JsonResponse({"error": "El servicio externo tardó demasiado en responder."}, status=504)
-
-        except requests.exceptions.RequestException as err:
-
-            return JsonResponse({"error": "Ocurrió un error inesperado al contactar el servicio externo."}, status=500)
+            if created:
+                partidos_creados += 1
 
         return partidos_creados
