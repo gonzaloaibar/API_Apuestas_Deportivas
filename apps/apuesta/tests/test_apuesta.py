@@ -1,38 +1,25 @@
 import pytest
-from rest_framework.test import APIClient
-from apps.usuario.models import Usuario
+from rest_framework import status
 
 from .fixtures_opcion_apuesta import get_opcion_apuesta
+from apps.usuario.tests.fixture_usuario import* #get_usuario_autenticado, api_client, token
+from .fixtures_partido import*
+from .fixtures_apuesta import*
 
-@pytest.fixture
-def usuario():
-    return Usuario.objects.create_user(
-        username="test",
-        password="1234",
-        nombre="Test",
-        apellido="Usuario",
-        cuil="20123456789",
-        saldo=50000
-    )
+@pytest.mark.django_db
+def test_listar_apuesta(get_usuario_autenticado, get_apuesta):
+    response = get_usuario_autenticado.get("/api/apuestas/")
 
-@pytest.fixture
-def api_client_autenticado(usuario):
-
-    client = APIClient()
-
-    client.force_authenticate(
-        user=usuario
-    )
-
-    return client
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
 
 @pytest.mark.django_db
 def test_crear_apuesta(
-    api_client_autenticado,
+    get_usuario_autenticado,
     get_opcion_apuesta
 ):
 
-    response = api_client_autenticado.post(
+    response = get_usuario_autenticado.post(
         "/api/apuestas/",
         {
             "opcion_apuesta": str(get_opcion_apuesta.uuid),

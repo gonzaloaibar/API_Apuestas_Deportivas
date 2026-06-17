@@ -1,6 +1,6 @@
 import pytest
 from apps.apuesta.models import OpcionApuesta
-from .fixtures_partido import get_partido
+from .fixtures_partido import* #get_partido
 
 
 @pytest.fixture
