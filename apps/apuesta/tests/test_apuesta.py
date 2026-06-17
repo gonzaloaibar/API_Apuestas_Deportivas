@@ -104,18 +104,18 @@ def test_crear_apuesta_monto_menor_al_minimo(cliente_autenticado, opcion_apuesta
     assert "monto" in str(response.data).lower()
 
 
-# #TEST PARA LA VALIDACION DE LA PREDICCION DUPLICADA
-#
-# @pytest.mark.django_db
-# def test_crear_apuesta_prediccion_duplicada(get_usuario_autenticado, get_opcion_apuesta, get_apuesta_pendiente):
-#     # get_apuesta_pendiente ya existe con la misma opcion y mismo usuario
-#     response = get_usuario_autenticado.post("/api/apuestas/", {
-#         "opcion_apuesta": str(get_opcion_apuesta.uuid),
-#         "monto_apostado": "5000"
-#     })
-#
-#     assert response.status_code == status.HTTP_400_BAD_REQUEST
-#     assert "predicción" in str(response.data).lower()
+#TEST PARA LA VALIDACION DE LA PREDICCION DUPLICADA
+
+@pytest.mark.django_db
+def test_crear_apuesta_prediccion_duplicada(cliente_autenticado, opcion_resultado_local, get_apuesta_pendiente):
+    # get_apuesta_pendiente ya existe con la misma opcion y mismo usuario
+    response = cliente_autenticado.post("/api/apuestas/", {
+        "opcion_apuesta": str(opcion_resultado_local.uuid),
+        "monto_apostado": "5000"
+    })
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "predicción" in str(response.data).lower()
 
 
 #TEST PARA MODIFICAR EL MONTO Y OPCIO DE UNA APUESTA
