@@ -1,7 +1,7 @@
 import pytest
 import requests.exceptions
 
-from apps.apuesta.excepciones import NoExistenPartidosError
+from apps.apuesta.excepciones import NoExistenPartidosError, FechasError
 from apps.usuario.tests.fixture_usuario import *
 from apps.servicio.ApiFootball import APIFootballService
 from rest_framework import status
@@ -11,8 +11,9 @@ def test_error_fecha_importar_partidos(get_superuser_autenticado):
     try:
         resultado = APIFootballService.importar('2023-03-05','2023-03-01')
         assert False, "Deberia lanzar un ValueError"
-    except ValueError as e:
-        assert 'es posterior a la fecha' in str(e)
+    except FechasError as e:
+        assert 'Error en las fechas ingresadas,por favor revisar' in str(e)
+
 
 @pytest.mark.django_db
 def test_importar_partidos_sin_fechas(get_superuser_autenticado):
@@ -99,13 +100,13 @@ def test_importar_partidos_ya_cargados_en_DB(get_superuser_autenticado,mocker):
 
 
 @pytest.mark.django_db
-def test_importar_partidos_error_interno(get_superuser_autenticado,mocker):
+def test_importar_partidos_error_con_api_externa(get_superuser_autenticado,mocker):
     fechas = {
         'from': '2023-03-01',
         'to': '2023-03-02'
     }
 
-    mocker.patch('apps.apuesta.api.APIFootballService.importar',side_effect = Exception)
+    mocker.patch('apps.apuesta.api.APIFootballService.importar',side_effect = ValueError)
 
     respuesta = get_superuser_autenticado.post('/api/partidos/importar_partidos/',fechas)
 

@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
-from .excepciones import NoExistenPartidosError
+from .excepciones import NoExistenPartidosError, FechasError
 from .filters import PartidoFilter
 from .models import Partido, Apuesta, OpcionApuesta, TipoApuesta, Prediccion
 from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer, ModificarApuestaSerializer
@@ -64,6 +64,8 @@ class PartidoViewSet(ModelViewSet):
 
         except NoExistenPartidosError as no_partidos:
             return Response({'error': f'{no_partidos.__str__()}'},status=status.HTTP_404_NOT_FOUND)
+        except FechasError as error_fechas:
+            return Response({'error': f'{error_fechas}'},status=status.HTTP_400_BAD_REQUEST)
 
         except requests.exceptions.HTTPError as http_err:
 
@@ -77,7 +79,7 @@ class PartidoViewSet(ModelViewSet):
 
             return Response({"error": "El servicio externo tardó demasiado en responder."}, status=status.HTTP_504_GATEWAY_TIMEOUT)
 
-        except Exception as e:
+        except ValueError as e:
             return Response(
                 {'error': f'{str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

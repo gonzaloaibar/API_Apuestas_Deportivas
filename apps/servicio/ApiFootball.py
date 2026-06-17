@@ -2,7 +2,7 @@ import requests
 from django.conf import settings
 from django.http import JsonResponse
 
-from apps.apuesta.excepciones import NoExistenPartidosError
+from apps.apuesta.excepciones import NoExistenPartidosError, FechasError
 from apps.apuesta.models import Partido
 from apps.apuesta.servicios import fecha_1_mayor_fecha_2, obtener_fecha_actual
 
@@ -44,7 +44,7 @@ class APIFootballService:
     @staticmethod
     def importar(fecha_inicio, fecha_fin):
         if fecha_1_mayor_fecha_2(fecha_inicio, fecha_fin):
-            raise ValueError (f'La fecha {fecha_inicio} es posterior a la fecha {fecha_fin}, por favor revise')
+            raise FechasError (f'La fecha {fecha_inicio} es posterior a la fecha {fecha_fin}, por favor revise')
         url = 'https://v3.football.api-sports.io/fixtures'
         headers = {
             'x-apisports-key': settings.API_FOOTBALL_KEY

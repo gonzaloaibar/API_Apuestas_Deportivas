@@ -37,5 +37,7 @@ def get_partido_finalizado():
         api_football_id = "123738",
         equipo_local="River",
         equipo_visitante="Boca",
-        estado="finalizado"
+        estado="finalizado",
+        goles_local = '2',
+        goles_visitante='2'
     )
