@@ -107,10 +107,10 @@ def test_crear_apuesta_monto_menor_al_minimo(cliente_autenticado, opcion_apuesta
 # #TEST PARA LA VALIDACION DE LA PREDICCION DUPLICADA
 #
 # @pytest.mark.django_db
-# def test_crear_apuesta_prediccion_duplicada():
+# def test_crear_apuesta_prediccion_duplicada(get_usuario_autenticado, get_opcion_apuesta, get_apuesta_pendiente):
 #     # get_apuesta_pendiente ya existe con la misma opcion y mismo usuario
-#     response = cliente_autenticado.post("/api/apuestas/", {
-#         "opcion_apuesta": str(opcion_apuesta_duplicada.uuid),
+#     response = get_usuario_autenticado.post("/api/apuestas/", {
+#         "opcion_apuesta": str(get_opcion_apuesta.uuid),
 #         "monto_apostado": "5000"
 #     })
 #
@@ -142,31 +142,33 @@ def test_modificar_monto_y_opcion_exitoso(cliente_autenticado, get_apuesta_pendi
     assert get_apuesta_pendiente.monto_apostado == Decimal("300.00")
     assert get_apuesta_pendiente.opcion_apuesta == nueva_opcion
 
-# @pytest.mark.django_db
-# def test_resolver_apuesta_ganada(get_apuesta_pendiente, mocker):
-#     mocker.patch(
-#         "apps.apuesta.api.dotenv_values",
-#         return_value={"PORCENTAJE_DE_COMISION": "0.10"}
-#     )
-#     opcion = get_apuesta_pendiente.opcion_apuesta  # multiplicador 1.80
-#     usuario = get_apuesta_pendiente.apostado_por
-#     saldo_inicial = usuario.saldo                  # 10000.00
-#
-#     resolver_apuesta_ganada(get_apuesta_pendiente, opcion)
-#
-#     # verificamos la apuesta
-#     get_apuesta_pendiente.refresh_from_db()
-#     assert get_apuesta_pendiente.estado == "ganada"
-#
-#     # verificamos los calculos
-#     # monto: 500, multiplicador: 1.80
-#     # premio_parcial = 500 * 1.80 = 900
-#     # ganancia = 900 - 500 = 400
-#     # comision = 400 * 0.10 = 40
-#     # premio_final = 900 - 40 = 860
-#     assert get_apuesta_pendiente.ganancia_cliente == Decimal("860.00")
-#     assert get_apuesta_pendiente.ganancia_casa == Decimal("40.00")
-#
-#     # verificamos el saldo del usuario
-#     usuario.refresh_from_db()
-#     assert usuario.saldo == saldo_inicial + Decimal("860.00")
+
+#TEST RESOLVER APUESTA GANADA
+@pytest.mark.django_db
+def test_resolver_apuesta_ganada(get_apuesta_pendiente, mocker):
+    mocker.patch(
+        "apps.apuesta.api.dotenv_values",
+        return_value={"PORCENTAJE_DE_COMISION": "0.10"}
+    )
+    opcion = get_apuesta_pendiente.opcion_apuesta  # multiplicador 1.80
+    usuario = get_apuesta_pendiente.apostado_por
+    saldo_inicial = usuario.saldo                  # 10000.00
+
+    resolver_apuesta_ganada(get_apuesta_pendiente, opcion)
+
+    # verificamos la apuesta
+    get_apuesta_pendiente.refresh_from_db()
+    assert get_apuesta_pendiente.estado == "ganada"
+
+    # verificamos los calculos
+    # monto: 500, multiplicador: 1.80
+    # premio_parcial = 500 * 1.80 = 900
+    # ganancia = 900 - 500 = 400
+    # comision = 400 * 0.10 = 40
+    # premio_final = 900 - 40 = 860
+    assert get_apuesta_pendiente.ganancia_cliente == Decimal("860.00")
+    assert get_apuesta_pendiente.ganancia_casa == Decimal("40.00")
+
+    # verificamos el saldo del usuario
+    usuario.refresh_from_db()
+    assert usuario.saldo == saldo_inicial + Decimal("860.00")
