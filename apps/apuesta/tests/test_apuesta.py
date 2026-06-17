@@ -89,3 +89,29 @@ def test_obtener_apuesta_de_otro_usuario(cliente_autenticado, crear_apuesta):
     assert response.status_code == status.HTTP_404_NOT_FOUND
     #assert "propias apuestas" in str(response.data).lower()
 
+# #TEST PARA LA VALIDACION DEL MONTO MINIMO
+#
+# @pytest.mark.django_db
+# def test_crear_apuesta_monto_menor_al_minimo(get_usuario_autenticado, get_opcion_apuesta):
+#     # get_opcion_apuesta tiene monto_minimo=100.00
+#     response = get_usuario_autenticado.post("/api/apuestas/", {
+#         "opcion_apuesta": str(get_opcion_apuesta.uuid),
+#         "monto_apostado": "10"        # menor al mínimo
+#     })
+#
+#     assert response.status_code == status.HTTP_400_BAD_REQUEST
+#     assert "monto" in str(response.data).lower()
+#
+# #TEST PARA LA VALIDACION DE LA PREDICCION DUPLICADA
+#
+# @pytest.mark.django_db
+# def test_crear_apuesta_prediccion_duplicada(get_usuario_autenticado, get_opcion_apuesta, get_apuesta_pendiente):
+#     # get_apuesta_pendiente ya existe con la misma opcion y mismo usuario
+#     response = get_usuario_autenticado.post("/api/apuestas/", {
+#         "opcion_apuesta": str(get_opcion_apuesta.uuid),
+#         "monto_apostado": "5000"
+#     })
+#
+#     assert response.status_code == status.HTTP_400_BAD_REQUEST
+#     assert "predicción" in str(response.data).lower()
+
