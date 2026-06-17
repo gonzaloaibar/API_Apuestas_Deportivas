@@ -22,7 +22,7 @@ def get_partido(db):
         goles_visitante=None,
         resultado_partido=ResultadoPartido.LOCAL,   # valor requerido por el modelo
         estado="pendiente",
-        fecha=timezone.now() + timezone.timedelta(days=1),
+        fecha = '2023-05-01T20:30:00+00:00'
     )
 
 @pytest.fixture
