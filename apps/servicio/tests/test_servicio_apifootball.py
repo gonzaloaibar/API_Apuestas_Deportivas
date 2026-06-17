@@ -32,13 +32,14 @@ def test_importar_partidos_existoso(get_superuser_autenticado,mocker):
         'from': '2023-03-01',
         'to': '2023-03-02'
     }
+    partidos_a_crear = 4
     ##Se va asimular que se crean 4 partidos
-    mocker.patch('apps.apuesta.api.APIFootballService.importar',return_value = 4)
+    mocker.patch('apps.apuesta.api.APIFootballService.importar',return_value = partidos_a_crear)
 
     respuesta = get_superuser_autenticado.post('/api/partidos/importar_partidos/',fechas)
 
     assert respuesta.status_code == status.HTTP_201_CREATED
-    assert 'se importaron correctamente 4 partidos' in respuesta.data['mensaje']
+    assert f'se importaron correctamente {partidos_a_crear} partidos' in respuesta.data['mensaje']
 
 
 @pytest.mark.django_db
