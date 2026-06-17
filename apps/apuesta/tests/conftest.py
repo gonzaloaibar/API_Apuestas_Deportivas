@@ -67,6 +67,17 @@ def opcion_resultado_local(get_partido):
     )
 
 @pytest.fixture
+def opcion_apuesta_partido_finalizado(get_partido_finalizado):
+    #opcion de apuesta para gana local
+    return OpcionApuesta.objects.create(
+        partido=get_partido_finalizado,
+        tipo_apuesta=TipoApuesta.RESULTADO,
+        prediccion=Prediccion.GANA_LOCAL,
+        multiplicador=Decimal("1.80"),
+        monto_minimo=Decimal("100.00"),
+    )
+
+@pytest.fixture
 def get_opcion_goles(get_partido):
     #opcion de apuesta para mas de tres goles
     return OpcionApuesta.objects.create(
