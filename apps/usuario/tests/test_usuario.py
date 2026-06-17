@@ -3,7 +3,9 @@ from decimal import Decimal
 import pytest
 from rest_framework import status
 from .fixture_usuario import *
-from ...apuesta.api import resolver_apuesta_perdida
+from ..excepciones import SaldoInsuficienteException
+from ...apuesta.api import resolver_apuesta_perdida, comprobar_saldo
+
 
 @pytest.mark.django_db
 def test_superuser(crear_superuser):
@@ -98,3 +100,14 @@ def test_usuario_no_encontrado(get_usuario_autenticado, mocker):
     })
 
     assert respuesta.status_code == status.HTTP_404_NOT_FOUND
+
+@pytest.mark.django_db
+def test_saldo_insuficiente(get_usuario):
+
+    try:
+        get_usuario.saldo= Decimal(15000)
+        get_usuario.save()
+        comprobar_saldo(get_usuario,Decimal(20000))
+
+    except SaldoInsuficienteException as e:
+        assert 'Saldo insuficinte para realizar esta accción' == str(e)
