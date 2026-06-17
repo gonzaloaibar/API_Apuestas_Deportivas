@@ -104,7 +104,7 @@ def test_crear_apuesta_monto_menor_al_minimo(cliente_autenticado, opcion_apuesta
     })
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "monto" in str(response.data).lower()
+    assert "monto mínimo" in str(response.data).lower()
 
 
 #TEST PARA LA VALIDACION DE LA PREDICCION DUPLICADA
@@ -118,7 +118,7 @@ def test_crear_apuesta_prediccion_duplicada(cliente_autenticado, opcion_resultad
     })
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "predicción" in str(response.data).lower()
+    assert "ya realizó una apuesta con esa predicción para este partido" in str(response.data).lower()
 
 
 #TEST PARA MODIFICAR EL MONTO Y OPCIO DE UNA APUESTA
@@ -145,6 +145,44 @@ def test_modificar_monto_y_opcion_exitoso(cliente_autenticado, get_apuesta_pendi
     assert get_apuesta_pendiente.monto_apostado == Decimal("300.00")
     assert get_apuesta_pendiente.opcion_apuesta == nueva_opcion
 
+#TEST PARA MODIFICAR OPCION Y MONTO APOSTADO FALLIDO POR OPCION DE PARTIDO FINZALIZADO
+
+@pytest.mark.django_db
+def test_modificar_opcion_partido_finalizado(cliente_autenticado, get_apuesta_pendiente, get_partido):
+    # Finalizamos el partido antes de intentar modificar
+    get_partido.estado = "finalizado"
+    get_partido.save()
+
+    nueva_opcion = OpcionApuesta.objects.create(
+        partido=get_partido,
+        tipo_apuesta=TipoApuesta.GOLES,
+        prediccion=Prediccion.MAS_3_GOLES,
+        multiplicador="2.50",
+        monto_minimo="100.00",
+    )
+    response = cliente_autenticado.patch(
+        f"/api/apuestas/{get_apuesta_pendiente.uuid}/modificar_apuesta/",
+        {
+            "opcion_apuesta": str(nueva_opcion.uuid),
+            "monto_apostado": Decimal("300.00")
+        }
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "no se puede apostar sobre un partido finalizado" in str(response.data).lower()
+
+#TEST MODIFICAR APUESTA FALLIDO POR APUESTA FINALIZADA
+
+@pytest.mark.django_db
+def test_modificar_apuesta_ganada(cliente_autenticado, get_apuesta_pendiente):
+    get_apuesta_pendiente.estado = "ganada"
+    get_apuesta_pendiente.save()
+
+    response = cliente_autenticado.patch(
+        f"/api/apuestas/{get_apuesta_pendiente.uuid}/modificar_apuesta/",
+        {"monto_apostado": Decimal("300.00")}
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "solo se pueden modificar apuestas pendientes." in str(response.data).lower()
 
 #TEST RESOLVER APUESTA GANADA
 @pytest.mark.django_db
