@@ -3,6 +3,7 @@ from rest_framework.test import APIClient
 from apps.usuario.models import Usuario
 
 from .fixtures_opcion_apuesta import get_opcion_apuesta
+from .fixtures_partido import *
 
 @pytest.fixture
 def usuario():

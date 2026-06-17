@@ -65,25 +65,21 @@ class PartidoViewSet(ModelViewSet):
         except NoExistenPartidosError as no_partidos:
             return Response({'error': f'{no_partidos.__str__()}'},status=status.HTTP_404_NOT_FOUND)
 
-        except Response.HTTPError as http_err:
+        except requests.exceptions.HTTPError as http_err:
 
-            return Response({"error": "Hubo un problema al consultar el servicio externo."}, status=502)
+            return Response({"error": "Hubo un problema al consultar el servicio externo."}, status=status.HTTP_502_BAD_GATEWAY)
 
         except requests.exceptions.ConnectionError as conn_err:
 
-            return Response({"error": "No se pudo conectar al servicio externo. Inténtelo más tarde."}, status=503)
+            return Response({"error": "No se pudo conectar al servicio externo. Inténtelo más tarde."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         except requests.exceptions.Timeout as timeout_err:
 
-            return Response({"error": "El servicio externo tardó demasiado en responder."}, status=504)
-
-        except requests.exceptions.RequestException as err:
-
-            return Response({"error": "Ocurrió un error inesperado al contactar el servicio externo."}, status=500)
+            return Response({"error": "El servicio externo tardó demasiado en responder."}, status=status.HTTP_504_GATEWAY_TIMEOUT)
 
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': f'{str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
