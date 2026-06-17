@@ -100,3 +100,26 @@ def test_modificar_opcion_apuesta(get_opcion_apuesta, get_superuser_autenticado)
     assert '60000' in respuesta.data['monto_minimo']
 
 
+@pytest.mark.django_db
+def test_modificar_opcion_apuesta_apuesta_existente(get_opcion_apuesta, get_superuser_autenticado,get_partido):
+
+    opcion_apuesta_nueva = OpcionApuesta.objects.create(
+        partido=get_partido,
+        tipo_apuesta='resultado',
+        prediccion='E',
+        multiplicador=2.5,
+        monto_minimo=5000
+    )
+
+    datos = {
+    'tipo_apuesta' : 'resultado',
+    "prediccion": "E",
+    "monto_minimo": "60000"
+    }
+    opcion_apuesta_uuid = get_opcion_apuesta.uuid
+
+    respuesta = get_superuser_autenticado.patch(f'/api/opcion_de_apuestas/{opcion_apuesta_uuid}/',datos)
+
+    assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'Ya existe una opción de apuesta con esa predicción para este partido.' in respuesta.data['non_field_errors']
+
