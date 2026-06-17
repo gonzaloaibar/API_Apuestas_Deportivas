@@ -1,10 +1,13 @@
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from apps.usuario.tests.fixture_usuario import crear_usuario
-from .conftest import crear_apuesta
+from apps.usuario.tests.fixture_usuario import *
+from apps.apuesta.tests.fixtures_apuesta import *
+from apps.apuesta.tests.fixtures_opcion_apuesta import *
+from apps.apuesta.tests.fixtures_partido import *
+from .conftest import *
 from ..api import resolver_apuesta_ganada
-from ..models import OpcionApuesta, TipoApuesta, Prediccion
+from ..models import OpcionApuesta, TipoApuesta, Prediccion, Apuesta,Partido
 from decimal import Decimal
 
 
@@ -191,3 +194,105 @@ def test_ganancias_casa_sin_autenticacion(api_client):
     response = api_client.get("/api/apuestas/ganancias_casa/")
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+# @pytest.mark.django_db
+# def test_resolver_apuesta_ganada(get_apuesta_pendiente, mocker):
+#     mocker.patch(
+#         "apps.apuesta.api.dotenv_values",
+#         return_value={"PORCENTAJE_DE_COMISION": "0.10"}
+#     )
+#     opcion = get_apuesta_pendiente.opcion_apuesta  # multiplicador 1.80
+#     usuario = get_apuesta_pendiente.apostado_por
+#     saldo_inicial = usuario.saldo                  # 10000.00
+#
+#     resolver_apuesta_ganada(get_apuesta_pendiente, opcion)
+#
+#     # verificamos la apuesta
+#     get_apuesta_pendiente.refresh_from_db()
+#     assert get_apuesta_pendiente.estado == "ganada"
+#
+#     # verificamos los calculos
+#     # monto: 500, multiplicador: 1.80
+#     # premio_parcial = 500 * 1.80 = 900
+#     # ganancia = 900 - 500 = 400
+#     # comision = 400 * 0.10 = 40
+#     # premio_final = 900 - 40 = 860
+#     assert get_apuesta_pendiente.ganancia_cliente == Decimal("860.00")
+#     assert get_apuesta_pendiente.ganancia_casa == Decimal("40.00")
+#
+#     # verificamos el saldo del usuario
+#     usuario.refresh_from_db()
+#     assert usuario.saldo == saldo_inicial + Decimal("860.00")
+
+
+@pytest.mark.django_db
+def test_eliminar_apuesta_exito(cliente_autenticado,get_usuario_cliente,get_apuesta_pendiente,mocker):
+
+    saldo_actual = get_usuario_cliente.saldo
+    monto_apostado = get_apuesta_pendiente.monto_apostado
+    apuesta_pendiente_uuid = get_apuesta_pendiente.uuid
+
+    mocker.patch('apps.apuesta.servicios.dotenv_values',return_value = {
+            'FECHA_HORA_SIMULADA': '2023-05-01T20:30:00+00:00'
+        })
+
+    respuesta = cliente_autenticado.delete(f'/api/apuestas/{apuesta_pendiente_uuid}/eliminar_apuesta/')
+
+    assert respuesta.status_code == status.HTTP_204_NO_CONTENT
+    assert 'Apuesta eliminada correctamente.' in respuesta.data['mensaje']
+    get_usuario_cliente.refresh_from_db()
+    assert get_usuario_cliente.saldo == saldo_actual + monto_apostado
+    assert not Apuesta.objects.filter(uuid =get_apuesta_pendiente.uuid).exists()
+
+
+@pytest.mark.django_db
+def test_eliminar_apuesta_finalizada_error(cliente_autenticado,get_usuario_cliente,get_apuesta_perdida,mocker):
+
+    apuesta_uuid = get_apuesta_perdida.uuid
+
+    mocker.patch('apps.apuesta.servicios.dotenv_values',return_value = {
+            'FECHA_HORA_SIMULADA': '2023-05-01T20:30:00+00:00'
+        })
+
+    respuesta = cliente_autenticado.delete(f'/api/apuestas/{apuesta_uuid}/eliminar_apuesta/')
+
+    assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'Solo se pueden eliminar apuestas pendientes.' in respuesta.data['error']
+
+
+@pytest.mark.django_db
+def test_no_eliminar_si_partido_ya_comenzo(cliente_autenticado,get_apuesta_pendiente,get_partido, mocker):
+
+    get_partido.fecha='2020-06-01T20:30:00+00:00'
+    apuesta_uuid = get_apuesta_pendiente.uuid
+
+    mocker.patch(
+        'apps.apuesta.api.obtener_fecha_actual',
+        return_value='2023-06-01T21:00:00+00:00'
+    )
+
+    cliente = cliente_autenticado
+    response = cliente.delete(f'/api/apuestas/{apuesta_uuid}/eliminar_apuesta/')
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert f'No se puede eliminar la apuesta {apuesta_uuid}, el partido ya comenzó.' in response.data['error']
+
+
+@pytest.mark.django_db
+def test_no_eliminar_apuesta_de_otro_usuario(crear_apuesta,cliente_autenticado):
+    # creo otro usuario
+    Usuario = get_user_model()
+
+    usuario_dueño = Usuario.objects.create_user(
+        username="user_dueño",
+        cuil="66666677777",
+        password="password123",
+        nombre="Testing",
+        apellido="Testing",
+    )
+    apuesta_usuario_dueño = crear_apuesta(apostado_por=usuario_dueño)
+
+    apuesta_usuario_dueño.save()
+
+    respuesta = cliente_autenticado.delete(f'/api/apuestas/{apuesta_usuario_dueño.uuid}/eliminar_apuesta/')
+
+    assert respuesta.status_code == status.HTTP_404_NOT_FOUND
