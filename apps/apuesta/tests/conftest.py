@@ -8,19 +8,6 @@ from apps.usuario.tests.fixture_usuario import crear_usuario
 from apps.apuesta.models import Partido, OpcionApuesta, Apuesta, ResultadoPartido, TipoApuesta, Prediccion
 
 
-### TUVE QUE REDEFINIR LOS FIXTURE DE USUARIO AQUI SOLO LLAMA A LA FUNCION crear_usuario
-
-# @pytest.fixture
-# def get_usuario(db):
-#     return crear_usuario(username='probando', cuil='123456789')
-#
-# @pytest.fixture
-# def get_usuario_autenticado(get_usuario):     # get_usuario ya tiene db
-#     refresh = RefreshToken.for_user(get_usuario)
-#     client = APIClient()
-#     client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
-#     return client
-
 
 ### FIXTURES DE PARTIDO
 
@@ -54,6 +41,16 @@ def get_partido_finalizado(db):
 
 
 ### FIXTURES PARA OPCIONES DE APUESTA
+
+@pytest.fixture
+def opcion_apuesta(get_partido):
+    return OpcionApuesta.objects.create(
+        partido=get_partido,
+        tipo_apuesta=TipoApuesta.RESULTADO,
+        prediccion=Prediccion.GANA_VISITANTE,
+        multiplicador=Decimal("1.80"),
+        monto_minimo=Decimal("100.00"),
+    )
 
 @pytest.fixture
 def opcion_resultado_local(get_partido):
@@ -92,10 +89,10 @@ def get_opcion_goles(get_partido):
 ### FIXTURES PARA APUESTA
 
 @pytest.fixture
-def get_apuesta_pendiente(get_usuario, opcion_resultado_local):
+def get_apuesta_pendiente(get_usuario_cliente, opcion_resultado_local):
     #apuesta en estado pendiente sin resolver
     return Apuesta.objects.create(
-        apostado_por=get_usuario,
+        apostado_por=get_usuario_cliente,
         opcion_apuesta=opcion_resultado_local,
         monto_apostado=Decimal("500.00"),
         estado="pendiente",
@@ -104,13 +101,13 @@ def get_apuesta_pendiente(get_usuario, opcion_resultado_local):
     )
 
 @pytest.fixture
-def get_apuesta_ganada(get_usuario, opcion_resultado_local):
+def get_apuesta_ganada(get_usuario_cliente, opcion_resultado_local):
     #apuesta en estado ganada resuelta
     monto = Decimal("500.00")
     multiplicador = opcion_resultado_local.multiplicador       # 1.80
     ganancia = (monto * multiplicador).quantize(Decimal("0.01"))
     return Apuesta.objects.create(
-        apostado_por=get_usuario,
+        apostado_por=get_usuario_cliente,
         opcion_apuesta=opcion_resultado_local,
         monto_apostado=monto,
         estado="ganada",
@@ -119,11 +116,11 @@ def get_apuesta_ganada(get_usuario, opcion_resultado_local):
     )
 
 @pytest.fixture
-def get_apuesta_perdida(get_usuario, opcion_resultado_local):
+def get_apuesta_perdida(get_usuario_cliente, opcion_resultado_local):
     #apuesta en estado perdida resuelta
     monto = Decimal("500.00")
     return Apuesta.objects.create(
-        apostado_por=get_usuario,
+        apostado_por=get_usuario_cliente,
         opcion_apuesta=opcion_resultado_local,
         monto_apostado=monto,
         estado="perdida",
@@ -135,7 +132,7 @@ def get_apuesta_perdida(get_usuario, opcion_resultado_local):
 ### PARA TEST QUE NECESITAN MULTIPLES APUESTAS
 
 @pytest.fixture
-def crear_apuesta(get_usuario, opcion_resultado_local):
+def crear_apuesta(get_usuario_cliente, opcion_resultado_local):
 
     def _crear(
         apostado_por=None,
@@ -146,7 +143,7 @@ def crear_apuesta(get_usuario, opcion_resultado_local):
         ganancia_casa=Decimal("0.00"),
     ):
         return Apuesta.objects.create(
-            apostado_por=apostado_por or get_usuario,
+            apostado_por=apostado_por or get_usuario_cliente,
             opcion_apuesta=opcion_apuesta or opcion_resultado_local,
             monto_apostado=monto_apostado,
             estado=estado,

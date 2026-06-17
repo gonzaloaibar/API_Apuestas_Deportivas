@@ -56,13 +56,13 @@ def administrador_autenticado(get_usuario_administrador):
     client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
     return client
 
-@pytest.fixture
-def get_usuario(db):
-    return crear_usuario(username='probando', cuil='123456789')
-
-@pytest.fixture
-def get_usuario_autenticado(get_usuario):     # get_usuario ya tiene db
-    refresh = RefreshToken.for_user(get_usuario)
-    client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
-    return client
+# @pytest.fixture
+# def get_usuario(db):
+#     return crear_usuario(username='probando', cuil='123456789')
+#
+# @pytest.fixture
+# def get_usuario_autenticado(get_usuario):     # get_usuario ya tiene db
+#     refresh = RefreshToken.for_user(get_usuario)
+#     client = APIClient()
+#     client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+#     return client
