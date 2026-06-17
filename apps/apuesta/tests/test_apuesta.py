@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from apps.usuario.tests.fixture_usuario import crear_usuario
 from .conftest import crear_apuesta
+from ..api import resolver_apuesta_ganada
 from ..models import OpcionApuesta, TipoApuesta, Prediccion
 from decimal import Decimal
 
@@ -141,3 +142,31 @@ def test_modificar_monto_y_opcion_exitoso(cliente_autenticado, get_apuesta_pendi
     assert get_apuesta_pendiente.monto_apostado == Decimal("300.00")
     assert get_apuesta_pendiente.opcion_apuesta == nueva_opcion
 
+# @pytest.mark.django_db
+# def test_resolver_apuesta_ganada(get_apuesta_pendiente, mocker):
+#     mocker.patch(
+#         "apps.apuesta.api.dotenv_values",
+#         return_value={"PORCENTAJE_DE_COMISION": "0.10"}
+#     )
+#     opcion = get_apuesta_pendiente.opcion_apuesta  # multiplicador 1.80
+#     usuario = get_apuesta_pendiente.apostado_por
+#     saldo_inicial = usuario.saldo                  # 10000.00
+#
+#     resolver_apuesta_ganada(get_apuesta_pendiente, opcion)
+#
+#     # verificamos la apuesta
+#     get_apuesta_pendiente.refresh_from_db()
+#     assert get_apuesta_pendiente.estado == "ganada"
+#
+#     # verificamos los calculos
+#     # monto: 500, multiplicador: 1.80
+#     # premio_parcial = 500 * 1.80 = 900
+#     # ganancia = 900 - 500 = 400
+#     # comision = 400 * 0.10 = 40
+#     # premio_final = 900 - 40 = 860
+#     assert get_apuesta_pendiente.ganancia_cliente == Decimal("860.00")
+#     assert get_apuesta_pendiente.ganancia_casa == Decimal("40.00")
+#
+#     # verificamos el saldo del usuario
+#     usuario.refresh_from_db()
+#     assert usuario.saldo == saldo_inicial + Decimal("860.00")
