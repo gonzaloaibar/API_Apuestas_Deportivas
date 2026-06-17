@@ -306,9 +306,7 @@ class ApuestaViewSet(ModelViewSet):
         return Response(
             {
                 "mensaje": "Apuesta modificada."
-                # "monto_apostado": apuesta.monto_apostado,
-                # "opcion_apuesta": apuesta.opcion_apuesta,
-                # "saldo_actual": usuario.saldo
+
             }
         )
 

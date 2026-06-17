@@ -3,10 +3,9 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from apps.usuario.tests.fixture_usuario import crear_usuario
 from .conftest import crear_apuesta
-#from .fixtures_opcion_apuesta import get_opcion_apuesta
-#from apps.usuario.tests.fixture_usuario import*
-# from .fixtures_partido import*
-# from .fixtures_apuesta import*
+from ..models import OpcionApuesta, TipoApuesta, Prediccion
+from decimal import Decimal
+
 
 #TEST PARA CREAR UNA APUESTA CON UN CLIENTE AUNTENTICADO
 
@@ -89,29 +88,56 @@ def test_obtener_apuesta_de_otro_usuario(cliente_autenticado, crear_apuesta):
     assert response.status_code == status.HTTP_404_NOT_FOUND
     #assert "propias apuestas" in str(response.data).lower()
 
-# #TEST PARA LA VALIDACION DEL MONTO MINIMO
-#
-# @pytest.mark.django_db
-# def test_crear_apuesta_monto_menor_al_minimo(get_usuario_autenticado, get_opcion_apuesta):
-#     # get_opcion_apuesta tiene monto_minimo=100.00
-#     response = get_usuario_autenticado.post("/api/apuestas/", {
-#         "opcion_apuesta": str(get_opcion_apuesta.uuid),
-#         "monto_apostado": "10"        # menor al mínimo
-#     })
-#
-#     assert response.status_code == status.HTTP_400_BAD_REQUEST
-#     assert "monto" in str(response.data).lower()
-#
+
+#TEST PARA LA VALIDACION DEL MONTO MINIMO
+
+@pytest.mark.django_db
+def test_crear_apuesta_monto_menor_al_minimo(cliente_autenticado, opcion_apuesta):
+    # get_opcion_apuesta tiene monto_minimo=100.00
+    response = cliente_autenticado.post("/api/apuestas/", {
+        "opcion_apuesta": str(opcion_apuesta.uuid),
+        "monto_apostado": "10"        # menor al mínimo
+    })
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "monto" in str(response.data).lower()
+
+
 # #TEST PARA LA VALIDACION DE LA PREDICCION DUPLICADA
 #
 # @pytest.mark.django_db
-# def test_crear_apuesta_prediccion_duplicada(get_usuario_autenticado, get_opcion_apuesta, get_apuesta_pendiente):
+# def test_crear_apuesta_prediccion_duplicada():
 #     # get_apuesta_pendiente ya existe con la misma opcion y mismo usuario
-#     response = get_usuario_autenticado.post("/api/apuestas/", {
-#         "opcion_apuesta": str(get_opcion_apuesta.uuid),
+#     response = cliente_autenticado.post("/api/apuestas/", {
+#         "opcion_apuesta": str(opcion_apuesta_duplicada.uuid),
 #         "monto_apostado": "5000"
 #     })
 #
 #     assert response.status_code == status.HTTP_400_BAD_REQUEST
 #     assert "predicción" in str(response.data).lower()
+
+
+#TEST PARA MODIFICAR EL MONTO Y OPCIO DE UNA APUESTA
+
+@pytest.mark.django_db
+def test_modificar_monto_y_opcion_exitoso(cliente_autenticado, get_apuesta_pendiente, get_partido):
+    nueva_opcion = OpcionApuesta.objects.create(
+        partido=get_partido,
+        tipo_apuesta=TipoApuesta.GOLES,
+        prediccion=Prediccion.MAS_3_GOLES,
+        multiplicador="2.50",
+        monto_minimo="100.00",
+    )
+    response = cliente_autenticado.patch(
+        f"/api/apuestas/{get_apuesta_pendiente.uuid}/modificar_apuesta/",
+        {
+            "opcion_apuesta": str(nueva_opcion.uuid),
+            "monto_apostado": Decimal("300.00")
+        }
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    get_apuesta_pendiente.refresh_from_db()
+    assert get_apuesta_pendiente.monto_apostado == Decimal("300.00")
+    assert get_apuesta_pendiente.opcion_apuesta == nueva_opcion
 
