@@ -53,14 +53,14 @@ class ModificarSaldoAPIView(APIView):
         try:
             usuario = Usuario.objects.get(pk=pk)
 
-            monto = request.data["monto"]
+            monto = Decimal(str(request.data["monto"]))
             accion = ''
 
             if monto <= 0:
                 return Response({'error':'El monto ingresado no es valido'},status=HTTP_400_BAD_REQUEST)
 
             if request.data['codigo'] == dotenv_values(".env").get('CODIGO_DE_RECARGA'):
-                usuario.saldo += Decimal(str(monto)) #convierto el saldo a Decimal
+                usuario.saldo += monto
                 usuario.save()
                 accion = 'Recarga'
             elif request.data['codigo'] == dotenv_values(".env").get('CODIGO_DE_RETIRO'):

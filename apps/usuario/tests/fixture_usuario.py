@@ -38,9 +38,9 @@ def token(get_usuario):
     }
 
 @pytest.fixture
-def get_usuario_autenticado(token,api_client):
-    #token = Token.objects.get_or_create(user = get_usuario)
-    api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token["access"]}')
+def get_usuario_autenticado(get_usuario,api_client):
+    refresh = refresh = RefreshToken.for_user(get_usuario)
+    api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
     return api_client
 
 @pytest.fixture
