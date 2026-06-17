@@ -1,7 +1,7 @@
 import pytest
 from rest_framework import status
 from apps.apuesta.models import OpcionApuesta
-from apps.apuesta.tests.fixtures_opcion_apuesta import crear_opcion_apuesta
+from apps.apuesta.tests.fixtures_opcion_apuesta import *
 from apps.apuesta.tests.fixtures_partido import crear_partidos, get_partido,get_partido_finalizado
 from apps.usuario.tests.fixture_usuario import * #api_client, get_superuser,crear_superuser
 
@@ -73,18 +73,30 @@ def test_opcion_apuesta_usuario_no_autenticado(get_partido,api_client):
     assert respuesta.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-# @pytest.mark.django_db
-# def test_opccion_apuesta(crear_partidos,crear_opcion_apuesta):
-#
-#     partido = crear_partidos(api_football_id='1234',equipo_local='Boca',equipo_visitante='RiBer',estado='pendiente',fecha='2023-03-01')
-#     partido2 = crear_partidos(api_football_id='1235', equipo_local='Boca', equipo_visitante='Huracan', estado='finalizado',fecha='2023-03-01')
-#     #opcion_apuesta = crear_opcion_apuesta
-#
-#     #assert opcion_apuesta.partido.equipo_local == 'River'
-#     print(partido)
-#     print(partido2)
-#     assert partido2.equipo_visitante == 'Huracan'
-#     assert True
-#
+@pytest.mark.django_db
+def test_eliminar_opcion_apuesta(get_opcion_apuesta,get_superuser_autenticado):
+
+    opcion_apuesta_uuid = get_opcion_apuesta.uuid
+    #print(f'uuid = {opcion_apuesta_uuid}')
+
+    respuesta = get_superuser_autenticado.delete(f'/api/opcion_de_apuestas/{opcion_apuesta_uuid}/')
+
+    assert respuesta.status_code == status.HTTP_204_NO_CONTENT
+
+
+@pytest.mark.django_db
+def test_modificar_opcion_apuesta(get_opcion_apuesta, get_superuser_autenticado):
+
+    datos = {
+    "prediccion": "L",
+    "monto_minimo": "60000"
+    }
+    opcion_apuesta_uuid = get_opcion_apuesta.uuid
+
+    respuesta = get_superuser_autenticado.patch(f'/api/opcion_de_apuestas/{opcion_apuesta_uuid}/',datos)
+
+    assert respuesta.status_code == status.HTTP_200_OK
+    assert 'L' in respuesta.data['prediccion']
+    assert '60000' in respuesta.data['monto_minimo']
 
 

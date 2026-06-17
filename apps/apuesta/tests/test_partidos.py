@@ -115,3 +115,32 @@ def test_uuid_es_unico(crear_partidos):
 
     assert partido1.uuid != partido2.uuid
 
+@pytest.mark.django_db
+def test_filtrar_partidos_por_equipo(crear_partidos,get_usuario_autenticado):
+    crear_partidos(
+        api_football_id=1,
+        equipo_local='Boca',
+        equipo_visitante='River',
+        estado='pendiente',
+        fecha='2023-05-01T20:00:00+00:00')
+    crear_partidos(
+        api_football_id=2,
+        equipo_local='Racing',
+        equipo_visitante='Independiente',
+        estado='pendiente',
+        fecha='2023-05-02T20:00:00+00:00')
+    crear_partidos(
+        api_football_id=3,
+        equipo_local='Huracan',
+        equipo_visitante='Boca',
+        estado='pendiente',
+        fecha='2023-05-05T20:00:00+00:00')
+
+    respuesta = get_usuario_autenticado.get('/api/partidos/?equipo=BOc')
+
+    assert len(respuesta.data['results']) == 2
+    assert 'Boca' in respuesta.data['results'][0]['equipo_local']
+    assert 'Boca' in respuesta.data['results'][1]['equipo_visitante']
+    assert respuesta.status_code == status.HTTP_200_OK
+
+
