@@ -54,3 +54,14 @@ def crear_superuser():
         is_superuser = True
     )
     return user
+
+@pytest.fixture
+def get_superuser(crear_superuser):
+    usuario = crear_superuser
+    return usuario
+
+@pytest.fixture
+def get_superuser_autenticado(api_client,crear_superuser):
+    refresh = RefreshToken.for_user(crear_superuser)
+    api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+    return api_client

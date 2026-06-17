@@ -1,5 +1,5 @@
 from decimal import Decimal
-
+import requests
 from decouple import config
 from django.db import transaction
 from django.db.models import Sum
@@ -7,10 +7,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status,filters
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, DjangoModelPermissions
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT
+from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
+from .excepciones import NoExistenPartidosError
 from .filters import PartidoFilter
 from .models import Partido, Apuesta, OpcionApuesta, TipoApuesta, Prediccion
 from .serializers import PartidoSerializer, ApuestaSerializer, OpcionApuestaSerializer, ModificarApuestaSerializer
@@ -60,11 +61,32 @@ class PartidoViewSet(ModelViewSet):
                 return Response(
                     {'mensaje': f'El rango de fechas que ingreso corresponde a partidos que ya estan cargados'},
                     status=status.HTTP_200_OK)
+
+        except NoExistenPartidosError as no_partidos:
+            return Response({'error': f'{no_partidos.__str__()}'},status=status.HTTP_404_NOT_FOUND)
+
+        except Response.HTTPError as http_err:
+
+            return Response({"error": "Hubo un problema al consultar el servicio externo."}, status=502)
+
+        except requests.exceptions.ConnectionError as conn_err:
+
+            return Response({"error": "No se pudo conectar al servicio externo. Inténtelo más tarde."}, status=503)
+
+        except requests.exceptions.Timeout as timeout_err:
+
+            return Response({"error": "El servicio externo tardó demasiado en responder."}, status=504)
+
+        except requests.exceptions.RequestException as err:
+
+            return Response({"error": "Ocurrió un error inesperado al contactar el servicio externo."}, status=500)
+
         except Exception as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
     @action(methods=['patch'], detail=False)
     def terminar_partido(self, request):
@@ -84,7 +106,7 @@ class PartidoViewSet(ModelViewSet):
             #partido=self.get_object()
         except ValueError:
             return Response({'error':'Error en la fecha'},status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response({"resultado":f"partidos terminados", "mensaje":"Apuestas ejecutadas correctamente"},status=HTTP_200_OK)
+        return Response({"resultado":f"partidos terminados", "mensaje":"Apuestas ejecutadas correctamente"},status=status.HTTP_200_OK)
 
 @transaction.atomic
 def resolver_apuesta_resultado(apuesta,opcion_apuesta):
