@@ -194,35 +194,6 @@ def test_ganancias_casa_sin_autenticacion(api_client):
     response = api_client.get("/api/apuestas/ganancias_casa/")
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-# @pytest.mark.django_db
-# def test_resolver_apuesta_ganada(get_apuesta_pendiente, mocker):
-#     mocker.patch(
-#         "apps.apuesta.api.dotenv_values",
-#         return_value={"PORCENTAJE_DE_COMISION": "0.10"}
-#     )
-#     opcion = get_apuesta_pendiente.opcion_apuesta  # multiplicador 1.80
-#     usuario = get_apuesta_pendiente.apostado_por
-#     saldo_inicial = usuario.saldo                  # 10000.00
-#
-#     resolver_apuesta_ganada(get_apuesta_pendiente, opcion)
-#
-#     # verificamos la apuesta
-#     get_apuesta_pendiente.refresh_from_db()
-#     assert get_apuesta_pendiente.estado == "ganada"
-#
-#     # verificamos los calculos
-#     # monto: 500, multiplicador: 1.80
-#     # premio_parcial = 500 * 1.80 = 900
-#     # ganancia = 900 - 500 = 400
-#     # comision = 400 * 0.10 = 40
-#     # premio_final = 900 - 40 = 860
-#     assert get_apuesta_pendiente.ganancia_cliente == Decimal("860.00")
-#     assert get_apuesta_pendiente.ganancia_casa == Decimal("40.00")
-#
-#     # verificamos el saldo del usuario
-#     usuario.refresh_from_db()
-#     assert usuario.saldo == saldo_inicial + Decimal("860.00")
-
 
 @pytest.mark.django_db
 def test_eliminar_apuesta_exito(cliente_autenticado,get_usuario_cliente,get_apuesta_pendiente,mocker):
