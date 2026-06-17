@@ -172,3 +172,22 @@ def test_resolver_apuesta_ganada(get_apuesta_pendiente, mocker):
     # verificamos el saldo del usuario
     usuario.refresh_from_db()
     assert usuario.saldo == saldo_inicial + Decimal("860.00")
+
+
+#TEST PARA CONSULTAR GANANCIAS DE LA CASA CON UN CLIENTE NORMAL
+
+@pytest.mark.django_db
+def test_ganancias_casa_cliente_no_autorizado(cliente_autenticado):
+    response = cliente_autenticado.get("/api/apuestas/ganancias_casa/")
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert "administradores" in str(response.data).lower()
+
+
+#TEST PARA CONSULTAR GANANCIAS DE LA CASA CON UN USUARIO SIN AUTENTICAR
+
+@pytest.mark.django_db
+def test_ganancias_casa_sin_autenticacion(api_client):
+    response = api_client.get("/api/apuestas/ganancias_casa/")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
